@@ -1,0 +1,27 @@
+<h2>Listing orders</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Bill No.</th>
+      <th>Table Name</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for order <- @orders do %>
+    <tr>
+      <td><%= bill_no(order) %></td>
+      <td><%= order.table.name %></td>
+      <td><%= order.status %></td>
+
+      <td class="text-right">
+        <%= link "Show", to: order_path(@conn, :show, order), class: "btn btn-default btn-xs" %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<%= link "New order", to: order_path(@conn, :new) %>

@@ -1,0 +1,24 @@
+<%= render "base_show.html", line_orders: @order.line_orders, order: @order %>
+
+<%= if @have_waiter do %>
+
+<p>
+  Waiter: <span><%= if @order.waiter, do: @order.waiter.name, else: "" %></span>
+</p>
+
+<%= else %>
+
+<%= form_for @changeset, order_path(@conn, :distributor_update_order, @order), fn f -> %>
+  <div class="form-group">
+    <%= label f, :waiter_id, "Waiter", class: "control-label" %>
+    <%= select f, :waiter_id, @waiters, class: "form-control" %>
+    <%= error_tag f, :waiter_id %>
+  </div>
+  <div class="form-group">
+    <%= submit "Next State", class: "btn btn-primary" %>
+  </div>
+<% end %>
+
+<%= link "Back", to: order_path(@conn, :distributor) %>
+
+<% end %>

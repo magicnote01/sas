@@ -1,0 +1,22 @@
+<%= render "base_summary.html", changeset: @changeset %>
+<%= form_for @changeset, order_path(@conn, :create), fn f -> %>
+
+  <%= inputs_for f, :line_orders, fn lo -> %>
+      <%= hidden_input lo, :product_id %>
+      <%= hidden_input lo, :quantity %>
+  <% end %>
+
+  <div class="form-group">
+    <%= label f, :payment_method, class: "control-label" %>
+    <%= for method <- @payment_method do %>
+      <div class="radio">
+        <label><%= radio_button(f, :payment_method, method)%><%= method %> </label>
+      </div>
+    <% end %>
+    <%= error_tag f, :payment_method %>
+  </div>
+
+  <div class="form-group">
+    <%= submit "Confirm", class: "btn btn-primary" %>
+  </div>
+<% end %>

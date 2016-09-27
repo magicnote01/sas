@@ -1,0 +1,19 @@
+<div class="jumbotron">
+  <h2><%= gettext "Welcome to %{name}", name: "DEEP SPACE" %></h2>
+  <p class="lead">SAS16 presented SASIN HALLOWEEN<br />
+    INFINITE SPACE<br />
+    INFINITE NIGHT<br />
+  </p>
+</div>
+
+<h1>Table</h1>
+
+<%= form_for @conn, table_session_path(@conn, :create), [as: :table_session], fn f -> %>
+  <div class="form-group">
+    <%= text_input f, :name, placeholder: "Name", class: "form-control" %>
+  </div>
+  <div class="form-group">
+    <%= password_input f, :password, placeholder: "Password", class: "form-control" %>
+  </div>
+  <%= submit "Log in", class: "btn btn-primary" %>
+<% end %>

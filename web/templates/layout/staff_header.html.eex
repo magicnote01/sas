@@ -1,0 +1,8 @@
+<div class="header">
+<ol class="breadcrumb text-right">
+  <%= if @current_user do %>
+    <li><%= "#{@current_user.name} #{@current_user.role}" %></li>
+    <li><%= home_page_on_role(@conn, @current_user.role) %></li>
+  <% end %>
+</ol>
+</div>

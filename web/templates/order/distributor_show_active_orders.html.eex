@@ -1,0 +1,12 @@
+
+<%= for changeset <- @changesets do %>
+
+  <%= if changeset.data.waiter do %>
+    <%= render "distributor_show_order.html", conn: @conn, changeset: changeset, order: changeset.data, waiters: @waiters, have_waiter: true %>
+  <%= else %>
+    <%= render "distributor_show_order.html", conn: @conn, changeset: changeset, order: changeset.data, waiters: @waiters, have_waiter: false %>
+  <% end %>
+
+<% end %>
+
+<%= link "Back", to: order_path(@conn, :distributor) %>

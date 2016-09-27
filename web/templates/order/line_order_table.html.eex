@@ -1,0 +1,28 @@
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Quantity</th>
+    </tr>
+  </thead>
+  <tbody>
+  <%= for %{name: name, price: price, quantity: quantity} <- @line_orders do %>
+      <tr>
+        <td><%= name %></td>
+        <td><%= price %></td>
+        <td><%= quantity %></td>
+      </tr>
+  <% end %>
+  </tbody>
+</table>
+<table class="table">
+  <tr>
+    <td>Service Charge (10%)</td>
+    <td><%= @order.service_charge %></td>
+  </tr>
+  <tr>
+    <td>Total Cost</td>
+    <td><%= @order.total %></td>
+  </tr>
+</table>

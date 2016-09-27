@@ -1,0 +1,11 @@
+<div id="socket_waiter">
+
+<%= for order <- @orders do %>
+
+  <div>
+    <%= render "waiter_show_order.html", conn: @conn, order: order %>
+  </div>
+
+<% end %>
+
+</div>

@@ -1,0 +1,32 @@
+<h2>Listing orders</h2>
+
+<table class="table" id="socket_distributor">
+  <thead>
+    <tr>
+      <th>Bill No.</th>
+      <th>Created At</th>
+      <th>Table Name</th>
+      <th>Status</th>
+      <th>Distributor</th>
+      <th>Waiter</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for order <- @orders do %>
+    <tr id=<%="#{order.id}"%> class="distributor_row" >
+      <td id=<%="#{order.id}_billNo"%> ><%= bill_no(order) %></td>
+      <td id=<%="#{order.id}_createAt"%> ><%= show_datetime(order.inserted_at) %></td>
+      <td id=<%="#{order.id}_tableName"%> ><%= order.table.name %></td>
+      <td id=<%="#{order.id}_status"%> ><%= order.status %></td>
+      <td id=<%="#{order.id}_distributorName"%> ><%= if order.distributor, do: order.distributor.name, else: "" %></td>
+      <td id=<%="#{order.id}_waiterName"%> ><%= if order.waiter, do: order.waiter.name, else: "" %></td>
+
+      <td id=<%="#{order.id}_link"%> class="text-right">
+        <%= if order.status == "Submit", do: link("Take Order", to: order_path(@conn, :distributor_take_order, order), class: "btn btn-default btn-xs"), else: "" %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+  <%= link "Show My Active Orders", to: order_path(@conn, :distributor_active_order) %>
+</table>

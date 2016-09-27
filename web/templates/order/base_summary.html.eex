@@ -1,0 +1,30 @@
+<h2>Order Summary</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Quantity</th>
+    </tr>
+  </thead>
+  <tbody>
+  <%= for line_order <- @changeset.changes.line_orders do %>
+      <tr>
+        <td><%= line_order.changes.name %></td>
+        <td><%= line_order.changes.price %></td>
+        <td><%= line_order.changes.quantity %></td>
+      </tr>
+  <% end %>
+  </tbody>
+</table>
+<table class="table">
+  <tr>
+    <td>Service Charge (10%)</td>
+    <td><%= @changeset.changes.service_charge %></td>
+  </tr>
+  <tr>
+    <td>Total Cost</td>
+    <td><%= @changeset.changes.total %></td>
+  </tr>
+</table>

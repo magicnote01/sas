@@ -1,0 +1,7 @@
+<div class="jumbotron">
+  <h2><%= gettext "Welcome to %{name}", name: "DEEP SPACE" %></h2>
+  <p class="lead">SAS16 presented SASIN HALLOWEEN<br />
+    INFINITE SPACE<br />
+    INFINITE NIGHT<br />
+  </p>
+</div>

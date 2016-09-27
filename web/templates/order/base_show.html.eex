@@ -1,0 +1,22 @@
+<h2>Show order</h2>
+
+<table class="table">
+  <tr>
+    <td>Bill No.</td>
+    <td><%= bill_no(@order) %></td>
+  </tr>
+  <tr>
+    <td>Table</td>
+    <td><%= if @order.table, do: @order.table.name, else: "" %></td>
+  </tr>
+  <tr>
+    <td>Status</td>
+    <td><%= @order.status %></td>
+  </tr>
+  <tr>
+    <td>Payment method</td>
+    <td><%= @order.payment_method %></td>
+  </tr>
+</table>
+
+<%= render "line_order_table.html", line_orders: @order.line_orders, order: @order %>

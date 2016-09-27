@@ -1,0 +1,25 @@
+<div class="jumbotron">
+  <h2><%= gettext "Welcome to %{name}", name: "Phoenix!" %></h2>
+  <p class="lead">A productive web framework that<br />does not compromise speed and maintainability.</p>
+</div>
+
+<div class="row marketing">
+  <div class="col-lg-6">
+    <h4>Manage</h4>
+    <ul>
+      <li>
+        <%= link "Tables", to: table_path(@conn, :index) %>
+      </li>
+      <li>
+        <%= link "Products", to: product_path(@conn, :index) %>
+      </li>
+      <li>
+        <%= link "Users", to: user_path(@conn, :index) %>
+      </li>
+    </ul>
+  </div>
+
+  <div class="col-lg-6">
+    <h4>Reports</h4>
+  </div>
+</div>

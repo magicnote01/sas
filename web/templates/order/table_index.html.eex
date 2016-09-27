@@ -1,0 +1,27 @@
+<h2>Table: <%= @table.name %></h2>
+
+<%= link "New order", to: order_path(@conn, :table_new), class: "btn btn-primary"%>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Bill No.</th>
+      <th>Status</th>
+      <th>Total Cost</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for order <- @orders do %>
+    <tr>
+      <td><%= bill_no(order) %></td>
+      <td><%= order.status %></td>
+      <td><%= order.total %></td>
+
+      <td class="text-right">
+        <%= link "Show", to: order_path(@conn, :table_show, order), class: "btn btn-default btn-xs" %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>

@@ -1,0 +1,7 @@
+<%= render "base_show.html", line_orders: @order.line_orders, order: @order %>
+
+<p>
+  Distributor: <span><%= if @order.distributor, do: @order.distributor.name, else: "" %></span>
+</p>
+
+<%= link("Complete", to: order_path(@conn, :waiter_complete_order, @order), class: "btn btn-primary") %>
