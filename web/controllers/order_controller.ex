@@ -45,6 +45,8 @@ defmodule Sas.OrderController do
     payment_method = Map.get(order_params, "payment_method")
     changeset = create_order_changeset(order_params, table, status, Order.prefix_table)
 
+    IO.puts inspect(remove_blank_and_split_orders_params(Map.get(order_params, "line_orders"), "Cocktail"))
+
     cond do
       is_nil(changeset) ->
         conn
@@ -394,18 +396,18 @@ defmodule Sas.OrderController do
         fn {_index, map} ->
           product = Repo.get!(Product, Map.get(map, "product_id"))
                     |> Repo.preload(:category)
-          Map.put("category", product.category.name)
+          Map.put(map,"category", product.category.name)
         end)
-      |> Sas.ListState.split_list( fn map -> Map.get(map, "cateogry") == cocktail end)
+      |> Sas.ListState.split_list( fn map -> Map.get(map, "category") == cocktail end)
 
       bar_orders_params =
-        Sas.ListState.map_state(
+        Sas.ListState.map_state(bar_orders_params,
         fn (map,acc) -> { {acc,map} , acc + 1 } end , 0)
         |> Enum.reduce( %{},
           fn ( {index,map} , acc ) -> Map.put(acc, "#{index}", map) end )
 
       stock_orders_params =
-        Sas.ListState.map_state(
+        Sas.ListState.map_state(stock_orders_params,
         fn (map,acc) -> { {acc,map} , acc + 1 } end , 0)
         |> Enum.reduce( %{},
           fn ( {index,map} , acc ) -> Map.put(acc, "#{index}", map) end )
