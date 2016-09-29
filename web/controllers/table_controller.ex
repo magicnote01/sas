@@ -14,7 +14,6 @@ defmodule Sas.TableController do
   end
 
   def create(conn, %{"table" => table_params}) do
-    IO.puts inspect(table_params)
     changeset = Table.changeset(%Table{}, table_params)
 
     case Repo.insert(changeset) do

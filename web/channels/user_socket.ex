@@ -25,10 +25,8 @@ defmodule Sas.UserSocket do
   def connect(%{"token" => token}, socket) do
     case Phoenix.Token.verify(socket, "user socket", token, max_age: @max_age) do
       {:ok, user_id} ->
-        IO.puts "Connect Pass"
         {:ok, assign(socket, :user_id, user_id)}
       {:error, _reason} ->
-        IO.puts "Connect Error"
         :error
     end
   end

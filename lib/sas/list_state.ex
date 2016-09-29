@@ -10,6 +10,20 @@ defmodule Sas.ListState do
     map_state(tail,fun,acc,[element|result])
   end
 
+  def split_list(list, fun) do
+    split_list(list, [], [], fun)
+  end
+  defp split_list([],list_true, list_false, _fun) do
+    { Enum.reverse(list_true) , Enum.reverse(list_false) }
+  end
+  defp split_list([head | tail], list_true, list_false, fun) do
+    if fun.(head) do
+      split_list(tail, [head | list_true], list_false, fun)
+    else
+      split_list(tail, list_true, [head | list_false], fun)
+    end
+  end
+
   def to_struct(kind, attrs) do
      struct = struct(kind)
      Enum.reduce Map.to_list(struct), struct, fn {k, _}, acc ->

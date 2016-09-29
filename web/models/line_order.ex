@@ -8,6 +8,7 @@ defmodule Sas.LineOrder do
     field :price, Money.Ecto.Type
     field :name, :string
     field :category, :string, virtual: true
+    field :autoset, :boolean, virtual: true
     belongs_to :order, Sas.Order
     belongs_to :product, Sas.Product
 
@@ -25,7 +26,7 @@ defmodule Sas.LineOrder do
       case changeset do
         %Ecto.Changeset{valid?: true, changes: %{quantity: quantity, product_id: product_id} } ->
           assoc(%Sas.LineOrder{product_id: product_id}, :product)
-          |> changeset.repo.update_all(inc: [quantity: (changeset.data.quantity - changeset.changes.quantity)])
+          |> changeset.repo.update_all(inc: [quantity: (changeset.data.quantity - quantity)])
           changeset
         %Ecto.Changeset{valid?: true } ->
           assoc(changeset.data, :product)
@@ -37,8 +38,17 @@ defmodule Sas.LineOrder do
 
   defp put_product_name_and_price(changeset) do
     case changeset do
-      %Ecto.Changeset{valid?: true, changes: %{product_id: product_id} } ->
-        product = Sas.Repo.get(Product,product_id)
+      %Ecto.Changeset{valid?: true, changes: %{quantity: quantity, product_id: product_id} } ->
+        product =
+          Sas.Repo.get(Product,product_id)
+          |> Sas.Repo.preload(:category)
+        changeset =
+          if quantity > product.quantity do
+            put_change(changeset, :quantity, product.quantity)
+            |> put_change(:autoset, true)
+          else
+            changeset
+          end
         put_change(changeset, :price, product.price)
         |> put_change(:name, product.name)
       _ -> changeset

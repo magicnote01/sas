@@ -45,6 +45,8 @@ defmodule Sas.OrderController do
     payment_method = Map.get(order_params, "payment_method")
     changeset = create_order_changeset(order_params, table, status, Order.prefix_table)
 
+    IO.puts inspect(remove_blank_and_split_orders_params(Map.get(order_params, "line_orders"), "Cocktail"))
+
     cond do
       is_nil(changeset) ->
         conn
@@ -57,7 +59,6 @@ defmodule Sas.OrderController do
       true ->
         case Repo.insert(changeset) do
           {:ok, order} ->
-            IO.puts inspect(order.id)
             OrderChannel.broadcast_new_order(order.id)
              conn
              |> put_flash(:info, "Order created successfully.")
@@ -377,6 +378,40 @@ defmodule Sas.OrderController do
       fn ({_index, map},acc) -> { {acc,map} , acc + 1 } end , 0)
     |> Enum.reduce( %{},
       fn ( {index,map} , acc ) -> Map.put(acc, "#{index}", map) end )
+  end
+
+  defp remove_blank_and_split_orders_params(line_orders_params, cocktail) do
+    blank_removed_orders_params =
+      line_orders_params
+      |> Enum.to_list
+      |> Enum.filter(
+        fn {_index, map} ->
+          {intVal, _} =
+            Map.get(map, "quantity")
+            |> Integer.parse
+          intVal > 0
+        end)
+    {bar_orders_params, stock_orders_params} =
+      Enum.map(blank_removed_orders_params,
+        fn {_index, map} ->
+          product = Repo.get!(Product, Map.get(map, "product_id"))
+                    |> Repo.preload(:category)
+          Map.put(map,"category", product.category.name)
+        end)
+      |> Sas.ListState.split_list( fn map -> Map.get(map, "category") == cocktail end)
+
+      bar_orders_params =
+        Sas.ListState.map_state(bar_orders_params,
+        fn (map,acc) -> { {acc,map} , acc + 1 } end , 0)
+        |> Enum.reduce( %{},
+          fn ( {index,map} , acc ) -> Map.put(acc, "#{index}", map) end )
+
+      stock_orders_params =
+        Sas.ListState.map_state(stock_orders_params,
+        fn (map,acc) -> { {acc,map} , acc + 1 } end , 0)
+        |> Enum.reduce( %{},
+          fn ( {index,map} , acc ) -> Map.put(acc, "#{index}", map) end )
+      {bar_orders_params, stock_orders_params}
   end
 
   defp load_table_bar() do

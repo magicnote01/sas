@@ -19,6 +19,7 @@ defmodule Sas.Order do
     field :billprefix, :string
     field :status, :string
     field :total, Money.Ecto.Type
+    field :type, :string
     field :service_charge, Money.Ecto.Type
     field :change, Money.Ecto.Type
     field :payment_method, :string
