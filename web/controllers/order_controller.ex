@@ -8,6 +8,7 @@ defmodule Sas.OrderController do
   alias Sas.Table
   alias Sas.User
   alias Sas.OrderChannel
+  alias Sas.DeliveryOrder
 
   def index(conn, _params) do
     orders = Repo.all(
@@ -45,7 +46,9 @@ defmodule Sas.OrderController do
     payment_method = Map.get(order_params, "payment_method")
     changeset = create_order_changeset(order_params, table, status, Order.prefix_table)
 
-    IO.puts inspect(remove_blank_and_split_orders_params(Map.get(order_params, "line_orders"), "Cocktail"))
+    {bar_line_orders, stock_line_orders} = remove_blank_and_split_orders_params(Map.get(order_params, "line_orders"), "Cocktail")
+    IO.puts inspect(create_delivery_order(bar_line_orders, table))
+    IO.puts inspect(create_delivery_order(stock_line_orders, table))
 
     cond do
       is_nil(changeset) ->
@@ -119,6 +122,17 @@ defmodule Sas.OrderController do
 
       order_params = Map.put(order_params, "line_orders", line_orders_params)
       Order.changeset(order, order_params)
+    end
+  end
+
+  defp create_delivery_order(line_orders, table) do
+    if line_orders == [] do
+      nil
+    else
+        table
+        |> build_assoc(:delivery_orders)
+        |> Map.put(:status, Order.status_waiting)
+        |> Map.put(:line_orders, line_orders)
     end
   end
 
@@ -391,7 +405,7 @@ defmodule Sas.OrderController do
             |> Integer.parse
           intVal > 0
         end)
-    {bar_orders_params, stock_orders_params} =
+    {bar_line_orders, stock_line_orders} =
       Enum.map(blank_removed_orders_params,
         fn {_index, map} ->
           product = Repo.get!(Product, Map.get(map, "product_id"))
@@ -400,18 +414,7 @@ defmodule Sas.OrderController do
         end)
       |> Sas.ListState.split_list( fn map -> Map.get(map, "category") == cocktail end)
 
-      bar_orders_params =
-        Sas.ListState.map_state(bar_orders_params,
-        fn (map,acc) -> { {acc,map} , acc + 1 } end , 0)
-        |> Enum.reduce( %{},
-          fn ( {index,map} , acc ) -> Map.put(acc, "#{index}", map) end )
-
-      stock_orders_params =
-        Sas.ListState.map_state(stock_orders_params,
-        fn (map,acc) -> { {acc,map} , acc + 1 } end , 0)
-        |> Enum.reduce( %{},
-          fn ( {index,map} , acc ) -> Map.put(acc, "#{index}", map) end )
-      {bar_orders_params, stock_orders_params}
+      {bar_line_orders, stock_line_orders}
   end
 
   defp load_table_bar() do

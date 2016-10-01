@@ -5,6 +5,7 @@ defmodule Sas.Table do
     field :name, :string
     field :password, :string
     has_many :orders, Sas.Order
+    has_many :delivery_orders, Sas.DeliveryOrder
 
     timestamps()
   end

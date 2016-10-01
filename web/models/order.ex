@@ -4,6 +4,7 @@ defmodule Sas.Order do
   @order_state %{
     new: "New",
     submit: "Submit",
+    waiting: "Waiting",
     in_process: "In Process",
     delivering: "Delivering",
     complete: "Complete",
@@ -25,6 +26,7 @@ defmodule Sas.Order do
     field :payment_method, :string
     belongs_to :table, Sas.Table
     has_many :line_orders, Sas.LineOrder
+    has_many :delivery_orders, Sas.DeliveryOrder
     belongs_to :distributor, Sas.User, foreign_key: :distributor_id
     belongs_to :cashier, Sas.User, foreign_key: :cashier_id
     belongs_to :waiter, Sas.User, foreign_key: :waiter_id
@@ -82,6 +84,18 @@ defmodule Sas.Order do
     |> validate_inclusion(:status, [@order_state.close])
   end
 
+  def changeset_waiting_order(struct) do
+    struct
+    |> change
+    |> put_change(:status, @order_state.waiting)
+  end
+
+  def changeset_close_order(struct) do
+    struct
+    |> change
+    |> put_change(:status, @order_state.close)
+  end
+
   def changeset_cancel_order(struct) do
     struct
     |> change
@@ -92,6 +106,9 @@ defmodule Sas.Order do
   end
   def status_submit() do
     @order_state.submit
+  end
+  def status_waiting() do
+    @order_state.waiting
   end
   def status_in_process() do
     @order_state.in_process
@@ -124,7 +141,8 @@ defmodule Sas.Order do
 
   def next_state(state) do
     state_transition = %{
-      @order_state.new => @order_state.submit,
+      @order_state.new => @order_state.waiting,
+      @order_state.waiting => @order_state.submit,
       @order_state.submit => @order_state.in_process,
       @order_state.in_process => @order_state.delivering,
       @order_state.delivering => @order_state.complete,
