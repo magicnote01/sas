@@ -46,10 +46,6 @@ defmodule Sas.OrderController do
     payment_method = Map.get(order_params, "payment_method")
     changeset = create_order_changeset(order_params, table, status, Order.prefix_table)
 
-    {bar_line_orders, stock_line_orders} = remove_blank_and_split_orders_params(Map.get(order_params, "line_orders"), "Cocktail")
-    IO.puts inspect(create_delivery_order(bar_line_orders, table))
-    IO.puts inspect(create_delivery_order(stock_line_orders, table))
-
     cond do
       is_nil(changeset) ->
         conn
@@ -60,6 +56,9 @@ defmodule Sas.OrderController do
         |> put_flash(:info, "Please confirm the order and choose a payment method")
         |> render("table_summary.html", changeset: changeset, payment_method: Order.payment_method)
       true ->
+        {bar_line_orders, stock_line_orders} = remove_blank_and_split_orders_params(Map.get(order_params, "line_orders"), "Cocktail")
+        bar_delivery_orders = create_delivery_order(bar_line_orders, table)
+        stock_delivery_orders = create_delivery_order(stock_line_orders, table)
         case Repo.insert(changeset) do
           {:ok, order} ->
             OrderChannel.broadcast_new_order(order.id)
