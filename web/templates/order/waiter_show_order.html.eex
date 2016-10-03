@@ -1,7 +1,7 @@
-<%= render "base_show.html", line_orders: @order.line_orders, order: @order %>
+<%= render "delivery_base_show.html", delivery_order: @delivery_order %>
 
 <p>
-  Distributor: <span><%= if @order.distributor, do: @order.distributor.name, else: "" %></span>
+  Distributor: <span><%= if @delivery_order.distributor, do: @delivery_order.distributor.name, else: "" %></span>
 </p>
 
-<%= link("Complete", to: order_path(@conn, :waiter_complete_order, @order), class: "btn btn-primary") %>
+<%= link("Complete", to: order_path(@conn, :waiter_complete_order, @delivery_order), class: "btn btn-primary") %>

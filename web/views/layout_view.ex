@@ -16,12 +16,14 @@ defmodule Sas.LayoutView do
     distributor = Sas.User.distributor
     waiter = Sas.User.waiter
     cashier = Sas.User.cashier
+    order_master = Sas.User.order_master
 
     case role do
       ^admin -> link @home, to: page_path(conn, :admin_index)
       ^distributor -> link @home, to: order_path(conn, :distributor)
       ^waiter -> link @home, to: order_path(conn, :waiter)
       ^cashier -> link @home, to: order_path(conn, :cashier)
+      ^order_master -> link @home, to: order_path(conn, :order_master)
     end
 
   end

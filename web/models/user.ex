@@ -5,6 +5,7 @@ defmodule Sas.User do
   @distributor "Distributor"
   @waiter "Waiter"
   @cashier "Cashier"
+  @order_master "Order Master"
 
   schema "users" do
     field :name, :string
@@ -43,8 +44,9 @@ defmodule Sas.User do
   def distributor, do: @distributor
   def waiter, do: @waiter
   def cashier, do: @cashier
+  def order_master, do: @order_master
 
   def roles do
-     [@admin, @distributor, @waiter, @cashier]
+     [@admin, @distributor, @waiter, @cashier, @order_master]
   end
 end

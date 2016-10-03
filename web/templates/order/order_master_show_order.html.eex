@@ -1,0 +1,43 @@
+<table class="table">
+  <tr>
+    <td>Table</td>
+    <td><%= @order.table.name %></td>
+  </tr>
+  <tr>
+    <td>Status</td>
+    <td><%= @order.status %></td>
+  </tr>
+  <tr>
+    <td>Payment method</td>
+    <td><%= @order.payment_method %></td>
+  </tr>
+</table>
+
+<%= render "line_order_table.html", line_orders: @order.line_orders, order: @order %>
+
+<%= form_for @changeset, order_path(@conn, :order_master_close_order, @order), fn f -> %>
+
+<table class="table" id="order_master_change_table">
+  <tr>
+    <td>Total</td>
+    <td><%= hidden_input f, :total, id: "order_master_total" %>
+      <%= @order.total %>
+    </td>
+  </tr>
+  <tr>
+    <td>Received Money</td>
+    <td><%= text_input f, :received_money, id: "order_master_received_money", class: "form-control" %></td>
+  </tr>
+  <tr>
+    <td>Change</td>
+    <td><%= text_input f, :change, id: "order_master_change", class: "form-control" %></td>
+  </tr>
+</table>
+
+<div class="form-group">
+  <%= submit "Receive Money", class: "btn btn-primary" %>
+</div>
+
+<% end %>
+
+<%= link("Cancel Order", to: order_path(@conn, :order_master_cancel_order, @order), class: "btn btn-danger", method: :delete, data: [confirm: "Are you sure?"]) %>

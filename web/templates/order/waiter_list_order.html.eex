@@ -1,9 +1,9 @@
 <div id="socket_waiter">
 
-<%= for order <- @orders do %>
+<%= for delivery_order <- @delivery_orders do %>
 
   <div>
-    <%= render "waiter_show_order.html", conn: @conn, order: order %>
+    <%= render "waiter_show_order.html", conn: @conn, delivery_order: delivery_order %>
   </div>
 
 <% end %>

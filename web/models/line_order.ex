@@ -11,7 +11,7 @@ defmodule Sas.LineOrder do
 
     belongs_to :order, Sas.Order
     belongs_to :product, Sas.Product
-    belongs_to :dilivery_order, Sas.DeliveryOrder
+    belongs_to :delivery_order, Sas.DeliveryOrder
 
     timestamps()
   end
@@ -34,6 +34,16 @@ defmodule Sas.LineOrder do
           |> changeset.repo.update_all(inc: [quantity: (changeset.data.quantity - changeset.changes.quantity)])
           changeset
       end
+    end )
+  end
+
+  def changeset_cancel_order(struct, _) do
+    struct
+    |> change
+    |> prepare_changes(fn changeset ->
+      assoc(changeset.data, :product)
+      |> changeset.repo.update_all(inc: [quantity: changeset.data.quantity])
+      changeset
     end )
   end
 

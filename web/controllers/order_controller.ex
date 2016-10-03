@@ -9,6 +9,7 @@ defmodule Sas.OrderController do
   alias Sas.User
   alias Sas.OrderChannel
   alias Sas.DeliveryOrder
+  alias Sas.Transaction
 
   def index(conn, _params) do
     orders = Repo.all(
@@ -17,7 +18,7 @@ defmodule Sas.OrderController do
         select: o
     )
     |> Repo.preload(:table)
-    |> Enum.sort_by(&(&1.inserted_at), &>=/2)
+    |> Enum.sort_by(&(&1.id), &>=/2)
     render(conn, "index.html", orders: orders)
   end
 
@@ -29,7 +30,7 @@ defmodule Sas.OrderController do
         select: o
     )
     |> Repo.preload(:table)
-    |> Enum.sort_by(&(&1.inserted_at), &>=/2)
+    |> Enum.sort_by(&(&1.id), &>=/2)
     render(conn, "table_index.html", orders: orders, table: table)
   end
 
@@ -41,7 +42,7 @@ defmodule Sas.OrderController do
   end
 
   def table_create(conn, %{"order" => order_params}) do
-    status = Order.status_submit
+    status = Order.status_waiting
     table = conn.assigns.current_table
     payment_method = Map.get(order_params, "payment_method")
     changeset = create_order_changeset(order_params, table, status, Order.prefix_table)
@@ -53,12 +54,9 @@ defmodule Sas.OrderController do
         |> redirect(to: order_path(conn, :table_new))
       is_nil(payment_method) ->
         conn
-        |> put_flash(:info, "Please confirm the order and choose a payment method")
+        |> put_flash(:info, "Please confirm the order")
         |> render("table_summary.html", changeset: changeset, payment_method: Order.payment_method)
       true ->
-        {bar_line_orders, stock_line_orders} = remove_blank_and_split_orders_params(Map.get(order_params, "line_orders"), "Cocktail")
-        bar_delivery_orders = create_delivery_order(bar_line_orders, table)
-        stock_delivery_orders = create_delivery_order(stock_line_orders, table)
         case Repo.insert(changeset) do
           {:ok, order} ->
             OrderChannel.broadcast_new_order(order.id)
@@ -91,7 +89,7 @@ defmodule Sas.OrderController do
         |> redirect(to: order_path(conn, :new))
       is_nil(payment_method) ->
         conn
-        |> put_flash(:info, "Please confirm the order and choose a payment method")
+        |> put_flash(:info, "Please confirm the order")
         |> render("summary.html", changeset: changeset, payment_method: Order.payment_method)
       true ->
         case Repo.insert(changeset) do
@@ -124,14 +122,17 @@ defmodule Sas.OrderController do
     end
   end
 
-  defp create_delivery_order(line_orders, table) do
+  defp create_delivery_order_changeset(line_orders, table, order, type) do
     if line_orders == [] do
       nil
     else
-        table
-        |> build_assoc(:delivery_orders)
-        |> Map.put(:status, Order.status_waiting)
-        |> Map.put(:line_orders, line_orders)
+        %DeliveryOrder{}
+        |> Map.put(:table_id, table.id)
+        |> Map.put(:order_id, order.id)
+        |> Map.put(:status, Order.status_submit)
+        |> Map.put(:type, type)
+        |> DeliveryOrder.changeset
+        |> DeliveryOrder.changeset_put_line_order(line_orders)
     end
   end
 
@@ -190,15 +191,15 @@ defmodule Sas.OrderController do
   end
 
   def distributor(conn, _) do
-    orders = distributor_get_orders
-    render(conn, "distributor_list_order.html", orders: orders)
+    delivery_orders = distributor_get_orders
+    render(conn, "distributor_list_order.html", delivery_orders: delivery_orders)
   end
 
   defp distributor_get_orders(distributor_id \\ nil) do
     [Order.status_submit, Order.status_in_process, Order.status_delivering]
     |> Enum.map( fn status ->
-      q = from o in Order,
-          select: o, preload: [:table, :distributor, :waiter],
+      q = from o in DeliveryOrder,
+          select: o, preload: [:table, :distributor, :waiter, :order],
           order_by: o.id
       q = if distributor_id do
         q |> where(status: ^status, distributor_id: ^distributor_id)
@@ -216,17 +217,17 @@ defmodule Sas.OrderController do
   end
 
   def distributor_take_order(conn, %{"id" => id}) do
-    order = Repo.get!(Order, id)
+    delivery_order = Repo.get!(DeliveryOrder, id)
     distributor = conn.assigns.current_user
     change = %{distributor_id: distributor.id}
-    changeset = Order.changeset_submit_to_in_process(order, change)
+    changeset = DeliveryOrder.changeset_add_distributor(delivery_order, change)
 
     case Repo.update(changeset) do
       {:ok, order} ->
         OrderChannel.broadcast_update_order(order.id)
         conn
         |> put_flash(:info, "Order updated successfully.")
-        |> redirect(to: order_path(conn, :distributor_show_order, order))
+        |> redirect(to: order_path(conn, :distributor_show_order, delivery_order))
       {:error, _changeset} ->
         conn
         |> put_flash(:error, "Something wrong!")
@@ -237,25 +238,26 @@ defmodule Sas.OrderController do
   def distributor_active_order(conn, _) do
     distributor = conn.assigns.current_user
     orders = distributor_get_orders(distributor.id) |> Repo.preload(:line_orders)
-    changesets = Enum.map(orders, &Order.changeset_in_process_to_delivering/1)
+    changesets = Enum.map(orders, &DeliveryOrder.changeset_add_waiter/1)
     waiters = load_waiters
 
     render(conn, "distributor_show_active_orders.html", waiters: waiters, changesets: changesets)
   end
 
   def distributor_show_order(conn, %{"id" => id})  do
-    order = Repo.get!(Order, id)
+    delivery_order = Repo.get!(DeliveryOrder, id)
     |> Repo.preload(:table)
     |> Repo.preload(:line_orders)
+    |> Repo.preload(:order)
     waiters = load_waiters
-    changeset = Order.changeset_in_process_to_delivering(order)
+    changeset = DeliveryOrder.changeset_add_waiter(delivery_order)
 
-    render(conn, "distributor_show_order.html", order: order, waiters: waiters, changeset: changeset, have_waiter: false)
+    render(conn, "distributor_show_order.html", delivery_order: delivery_order, waiters: waiters, changeset: changeset, have_waiter: false)
   end
 
-  def distributor_update_order(conn, %{"id" => id, "order" => order_params}) do
-    order = Repo.get!(Order, id)
-    changeset = Order.changeset_in_process_to_delivering(order, order_params)
+  def distributor_update_order(conn, %{"id" => id, "delivery_order" => delivery_order_params}) do
+    delivery_order = Repo.get!(DeliveryOrder, id)
+    changeset = DeliveryOrder.changeset_add_waiter(delivery_order, delivery_order_params)
 
     case Repo.update(changeset) do
       {:ok, order} ->
@@ -266,25 +268,25 @@ defmodule Sas.OrderController do
       {:error, _changeset} ->
         conn
         |> put_flash(:error, "Something wrong!")
-        |> redirect(to: order_path(conn, :distributor_show_order, order))
+        |> redirect(to: order_path(conn, :distributor_show_order, delivery_order))
     end
   end
 
   def waiter(conn, _) do
     waiter = conn.assigns.current_user
 
-    q = from o in Order,
+    q = from o in DeliveryOrder,
         where: o.status == ^Order.status_delivering and o.waiter_id == ^waiter.id,
-        select: o, preload: [:table, :line_orders, :distributor, :waiter]
-    orders = Repo.all q
+        select: o, preload: [:order, :table, :line_orders, :distributor, :waiter]
+    delivery_orders = Repo.all q
 
-    render(conn, "waiter_list_order.html", orders: orders)
+    render(conn, "waiter_list_order.html", delivery_orders: delivery_orders)
   end
 
   def waiter_complete_order(conn, %{"id" => id}) do
-    order = Repo.get!(Order, id)
+    delivery_order = Repo.get!(DeliveryOrder, id)
 
-    changeset = Order.changeset_delivering_to_complete(order)
+    changeset = DeliveryOrder.changeset_complete_delivery_order(delivery_order)
     case Repo.update(changeset) do
       {:ok, order} ->
         OrderChannel.broadcast_new_order(order.id)
@@ -299,28 +301,99 @@ defmodule Sas.OrderController do
   end
 
   def cashier(conn, _) do
-    q = from o in Order,
-        where: o.status == "Complete",
-        select: o, preload: [:table, :waiter]
-    orders = Repo.all q
-    render(conn, "cashier_list_order.html", orders: orders)
+    q = from t in Transaction,
+        select: t, preload: [:order, :table, :user]
+    transactions = Repo.all q
+    transactions = Enum.sort_by(transactions, &(&1.user.name))
+    render(conn, "cashier_list_order.html", transactions: transactions)
   end
 
   def cashier_close_order(conn, %{"id" => id}) do
     order = Repo.get!(Order, id)
+    |> Repo.preload(:table)
+    |> Repo.preload(:line_orders)
     cashier = conn.assigns.current_user
+    {bar_line_orders, stock_line_orders} = split_line_orders(order.line_orders, "Cocktail")
 
-    changeset = Order.changeset_complete_to_close(order, %{"cashier_id" => cashier.id})
-    case Repo.update(changeset) do
-      {:ok, order} ->
+    multi =
+      Ecto.Multi.new
+      |> Ecto.Multi.update(:order, Order.changeset_close_order(order, %{"cashier_id" => cashier.id}))
+
+    multi = if bar_line_orders != [], do: Ecto.Multi.insert(multi, :delivery_order_bar, create_delivery_order_changeset(bar_line_orders, order.table, order, DeliveryOrder.type_bar)), else: multi
+    multi = if stock_line_orders != [], do: Ecto.Multi.insert(multi, :delivery_order_non_bar, create_delivery_order_changeset(stock_line_orders, order.table, order, DeliveryOrder.type_non_bar)), else: multi
+
+    case Repo.transaction(multi) do
+      {:ok, %{order: order}} ->
         OrderChannel.broadcast_update_order(order.id)
         conn
         |> put_flash(:info, "Order updated successfully.")
         |> redirect(to: order_path(conn, :cashier))
-      {:error, _changeset} ->
+      {:error, _failed_operation, _failed_value, _changes_so_far} ->
         conn
         |> put_flash(:error, "Something wrong!")
         |> redirect(to: order_path(conn, :cashier))
+    end
+  end
+
+  def order_master(conn, _) do
+    q = from o in Order,
+        where: o.status == "Waiting",
+        select: o, preload: [:table]
+    orders = Repo.all q
+    orders = Enum.sort_by(orders, &(&1.inserted_at))
+    render(conn, "order_master_list_order.html", orders: orders)
+  end
+  def order_master_show_order(conn, %{"id" => id}) do
+    order = Repo.get!(Order, id)
+    |> Repo.preload(:line_orders)
+    |> Repo.preload(:table)
+
+    changeset = Transaction.changeset(%Transaction{total: order.total})
+
+    render(conn, "order_master_show_order.html", order: order, changeset: changeset)
+  end
+  def order_master_close_order(conn, %{"id" => id, "transaction" => transaction_params}) do
+    order = Repo.get!(Order, id)
+    |> Repo.preload(:line_orders)
+    |> Repo.preload(:table)
+    order_master = conn.assigns.current_user
+    transaction_changeset = Transaction.changeset(%Transaction{user_id: order_master.id, order_id: order.id, total: order.total, table_id: order.table.id}, transaction_params)
+    {bar_line_orders, stock_line_orders} = split_line_orders(order.line_orders, "Cocktail")
+
+    multi =
+      Ecto.Multi.new
+      |> Ecto.Multi.insert(:transaction, transaction_changeset)
+      |> Ecto.Multi.update(:order, Order.changeset_close_order(order, %{"order_master_id" => order_master.id}))
+
+    multi = if bar_line_orders != [], do: Ecto.Multi.insert(multi, :delivery_order_bar, create_delivery_order_changeset(bar_line_orders, order.table, order, DeliveryOrder.type_bar)), else: multi
+    multi = if stock_line_orders != [], do: Ecto.Multi.insert(multi, :delivery_order_non_bar, create_delivery_order_changeset(stock_line_orders, order.table, order, DeliveryOrder.type_non_bar)), else: multi
+
+    case Repo.transaction(multi) do
+      {:ok, %{order: order, transaction: transaction, delivery_order_bar: delivery_order_bar, delivery_order_non_bar: delivery_order_non_bar}} ->
+        conn
+        |> put_flash(:info, "Order updated successfully.")
+        |> redirect(to: order_path(conn, :order_master))
+      {:error, _failed_operation, _failed_value, _changes_so_far} ->
+        conn
+        |> put_flash(:error, "Received Money must be greater than total money")
+        |> render("order_master_show_order.html", order: order, changeset: transaction_changeset)
+    end
+  end
+  def order_master_cancel_order(conn, %{"id" => id}) do
+    order = Repo.get!(Order, id)
+    |> Repo.preload(:line_orders)
+
+    changeset = Order.changeset_cancel_order(order)
+    case Repo.update(changeset) do
+      {:ok, order} ->
+        OrderChannel.broadcast_update_order(order.id)
+        conn
+        |> put_flash(:info, "Order canceled successfully.")
+        |> redirect(to: order_path(conn, :order_master))
+      {:error, _changeset} ->
+        conn
+        |> put_flash(:error, "Something wrong!")
+        |> redirect(to: order_path(conn, :order_master))
     end
   end
 
@@ -393,27 +466,17 @@ defmodule Sas.OrderController do
       fn ( {index,map} , acc ) -> Map.put(acc, "#{index}", map) end )
   end
 
-  defp remove_blank_and_split_orders_params(line_orders_params, cocktail) do
-    blank_removed_orders_params =
-      line_orders_params
-      |> Enum.to_list
-      |> Enum.filter(
-        fn {_index, map} ->
-          {intVal, _} =
-            Map.get(map, "quantity")
-            |> Integer.parse
-          intVal > 0
-        end)
+  defp split_line_orders(line_orders, cocktail) do
     {bar_line_orders, stock_line_orders} =
-      Enum.map(blank_removed_orders_params,
-        fn {_index, map} ->
-          product = Repo.get!(Product, Map.get(map, "product_id"))
+      Enum.map(line_orders,
+        fn map ->
+          product = Repo.get!(Product, Map.get(map, :product_id))
                     |> Repo.preload(:category)
-          Map.put(map,"category", product.category.name)
+          Map.put(map, :category , product.category.name)
         end)
-      |> Sas.ListState.split_list( fn map -> Map.get(map, "category") == cocktail end)
+      |> Sas.ListState.split_list( fn map -> Map.get(map, :category) == cocktail end)
 
-      {bar_line_orders, stock_line_orders}
+    {bar_line_orders, stock_line_orders}
   end
 
   defp load_table_bar() do

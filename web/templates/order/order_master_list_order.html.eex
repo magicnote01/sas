@@ -1,0 +1,29 @@
+<h2>Listing orders</h2>
+
+<table class="table" id="socket_order_master">
+  <thead>
+    <tr>
+      <th>Bill No.</th>
+      <th>Created At</th>
+      <th>Table Name</th>
+      <th>Status</th>
+      <th>Total</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for order <- @orders do %>
+    <tr id=<%="#{order.id}"%> class="distributor_row" >
+      <td id=<%="#{order.id}_billNo"%> ><%= bill_no(order) %></td>
+      <td id=<%="#{order.id}_createAt"%> ><%= show_datetime(order.inserted_at) %></td>
+      <td id=<%="#{order.id}_tableName"%> ><%= order.table.name %></td>
+      <td id=<%="#{order.id}_status"%> ><%= order.status %></td>
+      <td id=<%="#{order.id}_total"%> ><%= order.total %></td>
+
+      <td id=<%="#{order.id}_link"%> class="text-right">
+        <%= link("Show Order", to: order_path(@conn, :order_master_show_order, order), class: "btn btn-default btn-xs") %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>

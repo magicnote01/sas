@@ -3,6 +3,7 @@ defmodule Sas.DeliveryOrder do
 
   schema "delivery_orders" do
     field :status, :string
+    field :type, :string
     belongs_to :order, Sas.Order
     belongs_to :table, Sas.Table
     belongs_to :distributor, Sas.User, foreign_key: :distributor_id
@@ -19,7 +20,11 @@ defmodule Sas.DeliveryOrder do
     struct
     |> cast(params, [:table_id, :status])
     |> validate_required([:table_id, :status])
-    |> cast_assoc(:line_orders, required: true)
+  end
+
+  def changeset_put_line_order(changeset, line_order) do
+    changeset
+    |> put_assoc(:line_orders, line_order)
   end
 
   def changeset_submit_delivery_order(struct) do
@@ -35,7 +40,7 @@ defmodule Sas.DeliveryOrder do
     |> put_change(:status, Sas.Order.status_in_process)
   end
 
-  def changeset_add_waiter(struct, params) do
+  def changeset_add_waiter(struct, params \\ %{}) do
     struct
     |> cast(params, [:waiter_id])
     |> validate_required([:waiter_id])
@@ -45,6 +50,13 @@ defmodule Sas.DeliveryOrder do
   def changeset_complete_delivery_order(struct) do
     struct
     |> change
-    |> put_change(:status, Sas.Order.status_complete) 
+    |> put_change(:status, Sas.Order.status_complete)
+  end
+
+  def type_bar() do
+    "Bar"
+  end
+  def type_non_bar() do
+    "Non-Bar"
   end
 end

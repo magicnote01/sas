@@ -17,20 +17,21 @@ import orderDistributor from "./order_distributor"
 import orderWaiter from "./order_waiter"
 import orderCashier from "./order_cashier"
 import buttonIncDec from "./button_inc_dec"
+import changeMoney from "./calculate_change"
 
-orderDistributor.init(socket, document.getElementById("socket_distributor"), "distributor")
-let distributorOrders = document.getElementsByClassName("distributor_row");
-Array.prototype.map.call(distributorOrders, (element) => {
-  orderDistributor.init(socket, element, "distributor", element.id)
-})
-
-orderWaiter.init(socket, document.getElementById("socket_waiter"), "waiter")
-
-orderCashier.init(socket, document.getElementById("socket_cashier"), "waiter")
-let cashierOrders = document.getElementsByClassName("cashier_row");
-Array.prototype.map.call(cashierOrders, (element) => {
-  orderCashier.init(socket, element, "cashier", element.id)
-})
+// orderDistributor.init(socket, document.getElementById("socket_distributor"), "distributor")
+// let distributorOrders = document.getElementsByClassName("distributor_row");
+// Array.prototype.map.call(distributorOrders, (element) => {
+//   orderDistributor.init(socket, element, "distributor", element.id)
+// })
+//
+// orderWaiter.init(socket, document.getElementById("socket_waiter"), "waiter")
+//
+// orderCashier.init(socket, document.getElementById("socket_cashier"), "waiter")
+// let cashierOrders = document.getElementsByClassName("cashier_row");
+// Array.prototype.map.call(cashierOrders, (element) => {
+//   orderCashier.init(socket, element, "cashier", element.id)
+// })
 
 let numberIncValueElements = document.getElementsByClassName("numberIncValue");
 Array.prototype.map.call(numberIncValueElements, (element) => {
@@ -41,6 +42,9 @@ let numberDecValueElements = document.getElementsByClassName("numberDecValue");
 Array.prototype.map.call(numberIncValueElements, (element) => {
   buttonIncDec.init(element, "-")
 })
+
+let orderMasterChange = document.getElementById("order_master_change_table");
+changeMoney.init(orderMasterChange)
 
 // Import local files
 //

@@ -1,0 +1,16 @@
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Quantity</th>
+    </tr>
+  </thead>
+  <tbody>
+  <%= for %{name: name, quantity: quantity} <- @line_orders do %>
+      <tr>
+        <td><%= name %></td>
+        <td><%= quantity %></td>
+      </tr>
+  <% end %>
+  </tbody>
+</table>

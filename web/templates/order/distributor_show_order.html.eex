@@ -1,14 +1,14 @@
-<%= render "base_show.html", line_orders: @order.line_orders, order: @order %>
+<%= render "delivery_base_show.html", delivery_order: @delivery_order %>
 
 <%= if @have_waiter do %>
 
 <p>
-  Waiter: <span><%= if @order.waiter, do: @order.waiter.name, else: "" %></span>
+  Waiter: <span><%= if @delivery_order.waiter, do: @delivery_order.waiter.name, else: "" %></span>
 </p>
 
 <%= else %>
 
-<%= form_for @changeset, order_path(@conn, :distributor_update_order, @order), fn f -> %>
+<%= form_for @changeset, order_path(@conn, :distributor_update_order, @delivery_order), fn f -> %>
   <div class="form-group">
     <%= label f, :waiter_id, "Waiter", class: "control-label" %>
     <%= select f, :waiter_id, @waiters, class: "form-control" %>

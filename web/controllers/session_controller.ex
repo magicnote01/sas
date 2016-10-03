@@ -26,6 +26,7 @@ defmodule Sas.SessionController do
     distributor = Sas.User.distributor
     waiter = Sas.User.waiter
     cashier = Sas.User.cashier
+    order_master = Sas.User.order_master
 
     case role do
       ^admin ->
@@ -40,6 +41,9 @@ defmodule Sas.SessionController do
       ^cashier ->
         conn
         |> redirect(to: order_path(conn, :cashier))
+      ^order_master ->
+        conn
+        |> redirect(to: order_path(conn, :order_master))
     end
 
   end

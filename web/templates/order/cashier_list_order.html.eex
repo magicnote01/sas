@@ -6,30 +6,24 @@
   <thead>
     <tr>
       <th>Bill No.</th>
-      <th>Created At</th>
+      <th>Received At</th>
       <th>Table Name</th>
-      <th>Status</th>
-      <th>Waiter</th>
-      <th>Payment Method</th>
+      <th>Order Master</th>
       <th>Total</th>
-      <th></th>
+      <th>Received Money</th>
+      <th>Change</th>
     </tr>
   </thead>
   <tbody>
-<%= for order <- @orders do %>
-    <tr id=<%="#{order.id}"%> class="cashier_row">
-      <td id=<%="#{order.id}_billNo"%> ><%= bill_no(order) %></td>
-      <td id=<%="#{order.id}_createAt"%> ><%= show_datetime(order.inserted_at) %></td>
-      <td id=<%="#{order.id}_tableName"%> ><%= order.table.name %></td>
-      <td id=<%="#{order.id}_status"%> ><%= order.status %></td>
-      <td id=<%="#{order.id}_waiterName"%> ><%= if order.waiter, do: order.waiter.name, else: "" %></td>
-      <td id=<%="#{order.id}_paymentMethod"%> ><%= order.payment_method %></td>
-      <td id=<%="#{order.id}_total"%> ><%= order.total %></td>
-
-      <td id=<%="#{order.id}_link"%> class="text-right">
-        <%= link("Edit Order", to: order_path(@conn, :edit, order), class: "btn btn-default btn-xs") %>
-        <%= link("Close Order", to: order_path(@conn, :cashier_close_order, order), class: "btn btn-default btn-xs") %>
-      </td>
+<%= for tran <- @transactions do %>
+    <tr id=<%="#{tran.id}"%> class="cashier_row">
+      <td id=<%="#{tran.id}_billNo"%> ><%= bill_no(tran.order) %></td>
+      <td id=<%="#{tran.id}_createAt"%> ><%= show_datetime(tran.inserted_at) %></td>
+      <td id=<%="#{tran.id}_tableName"%> ><%= if tran.table, do: tran.table.name, else: "" %></td>
+      <td id=<%="#{tran.id}_orderMaster"%> ><%= if tran.user, do: tran.user.name ,else: "" %></td>
+      <td id=<%="#{tran.id}_total"%> ><%= tran.total %></td>
+      <td id=<%="#{tran.id}_receivedMoney"%> ><%= tran.received_money %></td>
+      <td id=<%="#{tran.id}_change"%> ><%= tran.change %></td>
     </tr>
 <% end %>
   </tbody>

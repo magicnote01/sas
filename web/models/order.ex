@@ -20,17 +20,19 @@ defmodule Sas.Order do
     field :billprefix, :string
     field :status, :string
     field :total, Money.Ecto.Type
-    field :type, :string
+    field :type, :string, default: "Order"
     field :service_charge, Money.Ecto.Type
     field :change, Money.Ecto.Type
-    field :payment_method, :string
+    field :payment_method, :string, default: "Cash"
     belongs_to :table, Sas.Table
     has_many :line_orders, Sas.LineOrder
     has_many :delivery_orders, Sas.DeliveryOrder
     belongs_to :distributor, Sas.User, foreign_key: :distributor_id
     belongs_to :cashier, Sas.User, foreign_key: :cashier_id
     belongs_to :waiter, Sas.User, foreign_key: :waiter_id
+    belongs_to :order_master, Sas.User, foreign_key: :order_master_id
     field :note, :string
+    has_one :transction, Sas.Transaction
 
     timestamps()
   end
@@ -42,9 +44,15 @@ defmodule Sas.Order do
     struct
     |> cast(params, [:billprefix, :payment_method, :status, :table_id])
     |> validate_required([:payment_method])
+    |> validate_inclusion(:payment_method, ["Cash"])
     |> cast_assoc(:line_orders, required: true)
     |> validate_inclusion(:billprefix, [@prefix_table, @prefix_cashier, @prefix_manual])
     |> calculate_total_service_charge
+  end
+
+  def changeset_put_delivery_order(changeset, delivery_order) do
+    changeset
+    |> put_assoc(:delivery_orders, delivery_order)
   end
 
   def changeset_move_to_next_state(struct) do
@@ -76,18 +84,10 @@ defmodule Sas.Order do
     |> validate_inclusion(:status, [@order_state.complete])
   end
 
-  def changeset_complete_to_close(struct, params) do
+  def changeset_close_order(struct, params) do
     struct
-    |> cast(params, [:cashier_id, :change])
-    |> validate_required([:cashier_id])
-    |> move_to_next_state
-    |> validate_inclusion(:status, [@order_state.close])
-  end
-
-  def changeset_waiting_order(struct) do
-    struct
-    |> change
-    |> put_change(:status, @order_state.waiting)
+    |> cast(params, [:cashier_id, :change, :order_master_id])
+    |> put_change(:status, @order_state.close)
   end
 
   def changeset_close_order(struct) do
@@ -96,9 +96,28 @@ defmodule Sas.Order do
     |> put_change(:status, @order_state.close)
   end
 
+  def changeset_waiting_order(struct) do
+    struct
+    |> change
+    |> put_change(:status, @order_state.waiting)
+  end
+
   def changeset_cancel_order(struct) do
     struct
     |> change
+    |> reset_product_quantity
+    |> put_change(:status, @order_state.cancel)
+  end
+
+  defp reset_product_quantity(changeset) do
+    changeset.data.line_orders
+    |> Enum.reduce(changeset, fn(line_order, acc) ->
+      prepare_changes(acc, fn changeset ->
+        assoc(line_order, :product)
+        |> changeset.repo.update_all(inc: [quantity: line_order.quantity])
+        changeset
+      end)
+    end)
   end
 
   def status_new() do

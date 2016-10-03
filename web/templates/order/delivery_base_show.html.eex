@@ -1,0 +1,18 @@
+<h2>Show order</h2>
+
+<table class="table">
+  <tr>
+    <td>Bill No.</td>
+    <td><%= bill_no(@delivery_order.order) %></td>
+  </tr>
+  <tr>
+    <td>Table</td>
+    <td><%= if @delivery_order.table, do: @delivery_order.table.name, else: "" %></td>
+  </tr>
+  <tr>
+    <td>Status</td>
+    <td><%= @delivery_order.status %></td>
+  </tr>
+</table>
+
+<%= render "delivery_line_order_table.html", line_orders: @delivery_order.line_orders %>
