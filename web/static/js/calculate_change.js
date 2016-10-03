@@ -6,7 +6,7 @@ let ChangeMoney = {
     let changeField = document.getElementById("order_master_change");
 
     receivedMoneyField.addEventListener("change", e => {
-      let total = parseFloat(totalField.value.substring(1));
+      let total = parseFloat(totalField.value.substring(1).replace(",",""));
       let receivedMoney = parseFloat(receivedMoneyField.value);
       changeField.value = receivedMoney - total;
       if(isNaN(changeField.value)) {changeField.value = 0;}
