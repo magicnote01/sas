@@ -40,7 +40,7 @@ defmodule Sas.SessionController do
         |> redirect(to: order_path(conn, :waiter))
       ^cashier ->
         conn
-        |> redirect(to: order_path(conn, :cashier))
+        |> redirect(to: order_master_session_path(conn, :index))
       ^order_master ->
         conn
         |> redirect(to: order_path(conn, :order_master))

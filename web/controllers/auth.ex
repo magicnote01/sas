@@ -67,4 +67,19 @@ defmodule Sas.Auth do
       |> halt()
     end
   end
+
+  def confirm_order_master_session(conn, _opts) do
+    user = conn.assigns.current_user
+    order_master_session = Sas.Repo.get_by(Sas.OrderMasterSession, [user_id: user.id, status: "Open"])
+
+    if order_master_session do
+      conn
+      |> assign(:current_order_master_session, order_master_session)
+    else
+      conn
+      |> put_flash(:error, "Please wait for cashier to create session for you")
+      |> redirect(to: Helpers.order_path(conn, :order_master))
+      |> halt()
+    end
+  end
 end

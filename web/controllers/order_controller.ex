@@ -357,7 +357,9 @@ defmodule Sas.OrderController do
     |> Repo.preload(:line_orders)
     |> Repo.preload(:table)
     order_master = conn.assigns.current_user
-    transaction_changeset = Transaction.changeset(%Transaction{user_id: order_master.id, order_id: order.id, total: order.total, table_id: order.table.id}, transaction_params)
+    order_master_session = conn.assigns.current_order_master_session
+
+    transaction_changeset = Transaction.changeset(%Transaction{user_id: order_master.id, order_id: order.id, total: order.total, table_id: order.table.id, order_master_session_id: order_master_session.id}, transaction_params)
     {bar_line_orders, stock_line_orders} = split_line_orders(order.line_orders, "Cocktail")
 
     multi =

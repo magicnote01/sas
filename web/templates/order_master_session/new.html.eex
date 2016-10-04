@@ -1,0 +1,7 @@
+<h2>New order master session</h2>
+
+<%= render "form.html", changeset: @changeset,
+                        action: order_master_session_path(@conn, :create),
+                        order_masters: @order_masters %>
+
+<%= link "Back", to: order_master_session_path(@conn, :index) %>

@@ -32,7 +32,7 @@ defmodule Sas.Order do
     belongs_to :waiter, Sas.User, foreign_key: :waiter_id
     belongs_to :order_master, Sas.User, foreign_key: :order_master_id
     field :note, :string
-    has_one :transction, Sas.Transaction
+    has_one :transaction, Sas.Transaction
 
     timestamps()
   end
@@ -93,20 +93,31 @@ defmodule Sas.Order do
   def changeset_close_order(struct) do
     struct
     |> change
+    |> verify_order_current_status(@order_state.waiting)
     |> put_change(:status, @order_state.close)
   end
 
   def changeset_waiting_order(struct) do
     struct
     |> change
+    |> verify_order_current_status(@order_state.new)
     |> put_change(:status, @order_state.waiting)
   end
 
   def changeset_cancel_order(struct) do
     struct
     |> change
+    |> verify_order_current_status(@order_state.waiting)
     |> reset_product_quantity
     |> put_change(:status, @order_state.cancel)
+  end
+
+  defp verify_order_current_status(changeset, status) do
+    if changeset.data.status == status do
+      changeset
+    else
+      add_error(changeset, :status, "The status should be #{status}")
+    end
   end
 
   defp reset_product_quantity(changeset) do

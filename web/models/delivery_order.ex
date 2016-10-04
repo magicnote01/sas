@@ -37,6 +37,7 @@ defmodule Sas.DeliveryOrder do
     struct
     |> cast(params, [:distributor_id])
     |> validate_required([:distributor_id])
+    |> verify_order_current_status(Sas.Order.status_submit)
     |> put_change(:status, Sas.Order.status_in_process)
   end
 
@@ -44,13 +45,23 @@ defmodule Sas.DeliveryOrder do
     struct
     |> cast(params, [:waiter_id])
     |> validate_required([:waiter_id])
+    |> verify_order_current_status(Sas.Order.status_in_process)
     |> put_change(:status, Sas.Order.status_delivering)
   end
 
   def changeset_complete_delivery_order(struct) do
     struct
     |> change
+    |> verify_order_current_status(Sas.Order.status_delivering)
     |> put_change(:status, Sas.Order.status_complete)
+  end
+
+  defp verify_order_current_status(changeset, status) do
+    if changeset.data.status == status do
+      changeset
+    else
+      add_error(changeset, :status, "The status should be #{status}")
+    end
   end
 
   def type_bar() do

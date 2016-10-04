@@ -8,6 +8,7 @@ defmodule Sas.Transaction do
     belongs_to :order, Sas.Order
     belongs_to :user, Sas.User
     belongs_to :table, Sas.Table
+    belongs_to :order_master_session, Sas.OrderMasterSession
 
     timestamps()
   end
@@ -20,6 +21,11 @@ defmodule Sas.Transaction do
     |> cast(params, [:received_money])
     |> validate_required([:received_money])
     |> calculate_change
+    |> prepare_changes(fn changeset ->
+      assoc(%Sas.Transaction{order_master_session_id: changeset.data.order_master_session_id}, :order_master_session)
+      |> changeset.repo.update_all(inc: [total_money: changeset.data.total ])
+      changeset
+    end)
   end
 
   defp calculate_change(changeset) do

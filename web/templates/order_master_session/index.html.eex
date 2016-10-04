@@ -1,0 +1,30 @@
+<h2>Listing order master sessions</h2>
+
+<%= link "New Order Master Session", to: order_master_session_path(@conn, :new), class: "btn btn-primary" %>
+
+<%= link("Create Order", to: order_path(@conn, :new), class: "btn btn-primary") %>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Created At</th>
+      <th>Order Master</th>
+      <th>Total Money</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for order_master_session <- @order_master_sessions do %>
+    <tr>
+      <td><%= show_datetime(order_master_session.inserted_at) %></td>
+      <td><%= if order_master_session.user, do: order_master_session.user.name, else: "" %></td>
+      <td><%= order_master_session.total_money %></td>
+      <td><%= order_master_session.status %></td>
+      <td class="text-right">
+        <%= link "Show", to: order_master_session_path(@conn, :show, order_master_session), class: "btn btn-default btn-xs" %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>

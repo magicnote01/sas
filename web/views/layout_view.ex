@@ -22,7 +22,7 @@ defmodule Sas.LayoutView do
       ^admin -> link @home, to: page_path(conn, :admin_index)
       ^distributor -> link @home, to: order_path(conn, :distributor)
       ^waiter -> link @home, to: order_path(conn, :waiter)
-      ^cashier -> link @home, to: order_path(conn, :cashier)
+      ^cashier -> link @home, to: order_master_session_path(conn, :index)
       ^order_master -> link @home, to: order_path(conn, :order_master)
     end
 

@@ -60,7 +60,7 @@ defmodule Sas.Web do
     quote do
       use Phoenix.Router
 
-      import Sas.Auth, only: [authenticate_user: 2] # New import
+      import Sas.Auth, only: [authenticate_user: 2, confirm_order_master_session: 2] # New import
       import Sas.TableAuth, only: [authenticate_table: 2] # New import
     end
   end

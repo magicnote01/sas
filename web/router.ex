@@ -33,6 +33,10 @@ defmodule Sas.Router do
     plug :authenticate_user, role: Sas.User.order_master
   end
 
+  pipeline :order_master_session do
+    plug :confirm_order_master_session
+  end
+
   pipeline :table do
     plug Sas.TableAuth, repo: Sas.Repo
   end
@@ -93,17 +97,24 @@ defmodule Sas.Router do
 
     scope "/cashier" do
       pipe_through [:cashier]
-      get "/", OrderController, :cashier
+      get "/", OrderMasterSessionController, :index
+      get "/orders", OrderController, :cashier
       get "/orders/close/:id", OrderController, :cashier_close_order
-      resources "/r/orders", OrderController, only: [:new, :create, :show, :edit, :update ]
+      resources "/r/orders", OrderController, only: [:new, :create, :show]
+      resources "/r/order_master_sessions", OrderMasterSessionController, only: [:index, :new, :create, :show]
+      get "/order_master_sessions/close/:id", OrderMasterSessionController, :close
     end
 
     scope "/order_master" do
       pipe_through [:order_master]
       get "/", OrderController, :order_master
-      get "/orders/show/:id", OrderController, :order_master_show_order
-      post "/orders/close/:id", OrderController, :order_master_close_order
-      delete "/orders/cancel/:id", OrderController, :order_master_cancel_order
+
+      scope "/orders" do
+        pipe_through [:order_master_session]
+        get "/show/:id", OrderController, :order_master_show_order
+        post "/close/:id", OrderController, :order_master_close_order
+        delete "/cancel/:id", OrderController, :order_master_cancel_order
+      end
     end
   end
 
