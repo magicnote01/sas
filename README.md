@@ -6,3 +6,4 @@ TODO
 
 1. Add report feature
 2. Split distributor between bar and non-bar
+3. Add page for order master to order using table page
