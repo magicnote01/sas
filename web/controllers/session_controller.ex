@@ -28,22 +28,25 @@ defmodule Sas.SessionController do
     cashier = Sas.User.cashier
     order_master = Sas.User.order_master
 
-    case role do
-      ^admin ->
+    cond do
+      role == admin ->
         conn
         |> redirect(to: page_path(conn, :admin_index))
-      ^distributor ->
+      String.starts_with?(role, distributor) ->
         conn
         |> redirect(to: order_path(conn, :distributor))
-      ^waiter ->
+      role == waiter ->
         conn
         |> redirect(to: order_path(conn, :waiter))
-      ^cashier ->
+      role == cashier ->
         conn
         |> redirect(to: order_master_session_path(conn, :index))
-      ^order_master ->
+      role == order_master ->
         conn
         |> redirect(to: order_path(conn, :order_master))
+      true ->
+        conn
+        |> redirect(to: session_path(conn, :new))
     end
 
   end

@@ -3,4 +3,4 @@
 <%= render "form.html", changeset: @changeset,
                         action: order_path(@conn, :create) %>
 
-<%= link "Back", to: order_path(@conn, :cashier) %>
+<%= link "Back", to: order_master_session_path(@conn, :index) %>

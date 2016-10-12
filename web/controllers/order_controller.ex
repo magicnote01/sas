@@ -191,21 +191,28 @@ defmodule Sas.OrderController do
   end
 
   def distributor(conn, _) do
-    delivery_orders = distributor_get_orders
+    distributor = conn.assigns.current_user
+    delivery_orders = distributor_get_orders(distributor)
     render(conn, "distributor_list_order.html", delivery_orders: delivery_orders)
   end
 
-  defp distributor_get_orders(distributor_id \\ nil) do
+  defp distributor_get_orders(distributor) do
+    distributor_bar = User.distributor_bar
+    distributor_non_bar = User.distributor_non_bar
+
+    order_type =
+      case distributor.role do
+        ^distributor_bar -> DeliveryOrder.type_bar()
+        ^distributor_non_bar -> DeliveryOrder.type_non_bar()
+        _ -> DeliveryOrder.type_non_bar()
+      end
+
     [Order.status_submit, Order.status_in_process, Order.status_delivering]
     |> Enum.map( fn status ->
       q = from o in DeliveryOrder,
           select: o, preload: [:table, :distributor, :waiter, :order],
+          where: o.status == ^status and o.type == ^order_type,
           order_by: o.id
-      q = if distributor_id do
-        q |> where(status: ^status, distributor_id: ^distributor_id)
-      else
-        q |> where(status: ^status)
-      end
       if status == Order.status_delivering do
         order = Repo.all(q)
         |> Enum.sort(&(&1.waiter.name < &2.waiter.name))
@@ -237,7 +244,7 @@ defmodule Sas.OrderController do
 
   def distributor_active_order(conn, _) do
     distributor = conn.assigns.current_user
-    orders = distributor_get_orders(distributor.id) |> Repo.preload(:line_orders)
+    orders = distributor_get_orders(distributor) |> Repo.preload(:line_orders)
     changesets = Enum.map(orders, &DeliveryOrder.changeset_add_waiter/1)
     waiters = load_waiters
 
@@ -308,39 +315,12 @@ defmodule Sas.OrderController do
     render(conn, "cashier_list_order.html", transactions: transactions)
   end
 
-  def cashier_close_order(conn, %{"id" => id}) do
-    order = Repo.get!(Order, id)
-    |> Repo.preload(:table)
-    |> Repo.preload(:line_orders)
-    cashier = conn.assigns.current_user
-    {bar_line_orders, stock_line_orders} = split_line_orders(order.line_orders, "Cocktail")
-
-    multi =
-      Ecto.Multi.new
-      |> Ecto.Multi.update(:order, Order.changeset_close_order(order, %{"cashier_id" => cashier.id}))
-
-    multi = if bar_line_orders != [], do: Ecto.Multi.insert(multi, :delivery_order_bar, create_delivery_order_changeset(bar_line_orders, order.table, order, DeliveryOrder.type_bar)), else: multi
-    multi = if stock_line_orders != [], do: Ecto.Multi.insert(multi, :delivery_order_non_bar, create_delivery_order_changeset(stock_line_orders, order.table, order, DeliveryOrder.type_non_bar)), else: multi
-
-    case Repo.transaction(multi) do
-      {:ok, %{order: order}} ->
-        OrderChannel.broadcast_update_order(order.id)
-        conn
-        |> put_flash(:info, "Order updated successfully.")
-        |> redirect(to: order_path(conn, :cashier))
-      {:error, _failed_operation, _failed_value, _changes_so_far} ->
-        conn
-        |> put_flash(:error, "Something wrong!")
-        |> redirect(to: order_path(conn, :cashier))
-    end
-  end
-
   def order_master(conn, _) do
     q = from o in Order,
         where: o.status == "Waiting",
         select: o, preload: [:table]
     orders = Repo.all q
-    orders = Enum.sort_by(orders, &(&1.inserted_at))
+    orders = Enum.sort(orders, &(Timex.diff(&1.inserted_at, &2.inserted_at) < 0 ) )
     render(conn, "order_master_list_order.html", orders: orders)
   end
   def order_master_show_order(conn, %{"id" => id}) do

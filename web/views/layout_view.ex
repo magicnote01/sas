@@ -18,12 +18,13 @@ defmodule Sas.LayoutView do
     cashier = Sas.User.cashier
     order_master = Sas.User.order_master
 
-    case role do
-      ^admin -> link @home, to: page_path(conn, :admin_index)
-      ^distributor -> link @home, to: order_path(conn, :distributor)
-      ^waiter -> link @home, to: order_path(conn, :waiter)
-      ^cashier -> link @home, to: order_master_session_path(conn, :index)
-      ^order_master -> link @home, to: order_path(conn, :order_master)
+    cond do
+      role == admin -> link @home, to: page_path(conn, :admin_index)
+      String.starts_with?(role, distributor) -> link @home, to: order_path(conn, :distributor)
+      role == waiter -> link @home, to: order_path(conn, :waiter)
+      role == cashier -> link @home, to: order_master_session_path(conn, :index)
+      role == order_master -> link @home, to: order_path(conn, :order_master)
+      true -> ""
     end
 
   end

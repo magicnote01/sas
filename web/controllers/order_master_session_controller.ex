@@ -25,6 +25,15 @@ defmodule Sas.OrderMasterSessionController do
     Repo.all(q)
   end
 
+  def get_latest_order_master_session(user) do
+    q = from o in OrderMasterSession,
+    where: o.user_id == ^user.id and o.status == ^"Open",
+    select: o
+    order_master_sessions = Repo.all(q)
+    Enum.sort(order_master_sessions, &(Timex.diff(&1.inserted_at, &2.inserted_at) > 0 ) )
+    |> Enum.take(1)
+  end
+
   def create(conn, %{"order_master_session" => order_master_session_params}) do
     changeset = OrderMasterSession.changeset(%OrderMasterSession{}, order_master_session_params)
 

@@ -100,9 +100,8 @@ defmodule Sas.Router do
       pipe_through [:cashier]
       get "/", OrderMasterSessionController, :index
       get "/orders", OrderController, :cashier
-      get "/orders/close/:id", OrderController, :cashier_close_order
       resources "/r/orders", OrderController, only: [:new, :create, :show]
-      resources "/r/order_master_sessions", OrderMasterSessionController, only: [:index, :new, :create, :show]
+      resources "/r/order_master_sessions", OrderMasterSessionController, only: [:new, :create, :show]
       get "/order_master_sessions/close/:id", OrderMasterSessionController, :close
     end
 

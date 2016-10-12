@@ -27,12 +27,6 @@ defmodule Sas.DeliveryOrder do
     |> put_assoc(:line_orders, line_order)
   end
 
-  def changeset_submit_delivery_order(struct) do
-    struct
-    |> change
-    |> put_change(:status, Sas.Order.status_submit)
-  end
-
   def changeset_add_distributor(struct, params) do
     struct
     |> cast(params, [:distributor_id])

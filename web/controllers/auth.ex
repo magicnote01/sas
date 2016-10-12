@@ -2,6 +2,7 @@ defmodule Sas.Auth do
   import Plug.Conn
   import Comeonin.Bcrypt, only: [checkpw: 2, dummy_checkpw: 0]
   import Phoenix.Controller
+  import Ecto.Query
   alias Sas.Router.Helpers
 
   def init(opts) do
@@ -58,7 +59,7 @@ defmodule Sas.Auth do
   def authenticate_user(conn, opts) do
     role = Keyword.fetch!(opts, :role)
     user = conn.assigns.current_user
-    if user && user.role == role do
+    if user && String.starts_with?(user.role, role) do
       conn
     else
       conn
@@ -70,16 +71,17 @@ defmodule Sas.Auth do
 
   def confirm_order_master_session(conn, _opts) do
     user = conn.assigns.current_user
-    order_master_session = Sas.Repo.get_by(Sas.OrderMasterSession, [user_id: user.id, status: "Open"])
+    order_master_sessions = Sas.OrderMasterSessionController.get_latest_order_master_session(user)
 
-    if order_master_session do
-      conn
-      |> assign(:current_order_master_session, order_master_session)
-    else
-      conn
-      |> put_flash(:error, "Please wait for cashier to create session for you")
-      |> redirect(to: Helpers.order_path(conn, :order_master))
-      |> halt()
+    case Enum.fetch(order_master_sessions,0) do
+      {:ok, order_master_session} ->
+        conn
+        |> assign(:current_order_master_session, order_master_session)
+      :error ->
+        conn
+        |> put_flash(:error, "Please wait for cashier to create session for you")
+        |> redirect(to: Helpers.order_path(conn, :order_master))
+        |> halt()
     end
   end
 end

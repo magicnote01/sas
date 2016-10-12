@@ -87,21 +87,8 @@ defmodule Sas.Order do
   def changeset_close_order(struct, params) do
     struct
     |> cast(params, [:cashier_id, :change, :order_master_id])
-    |> put_change(:status, @order_state.close)
-  end
-
-  def changeset_close_order(struct) do
-    struct
-    |> change
     |> verify_order_current_status(@order_state.waiting)
     |> put_change(:status, @order_state.close)
-  end
-
-  def changeset_waiting_order(struct) do
-    struct
-    |> change
-    |> verify_order_current_status(@order_state.new)
-    |> put_change(:status, @order_state.waiting)
   end
 
   def changeset_cancel_order(struct) do
