@@ -1,5 +1,7 @@
 <h2>Listing orders</h2>
 
+<%= link "New Order", to: table_path(@conn, :order_master_table), class: "btn btn-primary" %>
+
 <table class="table" id="socket_order_master">
   <thead>
     <tr>

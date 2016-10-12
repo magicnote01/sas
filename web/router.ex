@@ -53,7 +53,8 @@ defmodule Sas.Router do
     pipe_through [:browser, :table] # Use the default browser stack
 
     get "/", TableSessionController, :new
-    post "/", TableSessionController, :create
+    post "/t", TableSessionController, :create
+    get "/t", TableSessionController, :create
     get "/t/:name/:password", TableSessionController, :create
 
     scope "/orders/" do
@@ -108,6 +109,7 @@ defmodule Sas.Router do
     scope "/order_master" do
       pipe_through [:order_master]
       get "/", OrderController, :order_master
+      get "/take_order", TableController, :order_master_table
 
       scope "/orders" do
         pipe_through [:order_master_session]

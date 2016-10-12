@@ -8,6 +8,15 @@ defmodule Sas.TableController do
     render(conn, "index.html", tables: tables)
   end
 
+  def order_master_table(conn, _params) do
+    tables =
+      Repo.all(Table)
+      |> Enum.sort_by(&(&1.name))
+    first_tables = Enum.take_every(tables, 2)
+    second_tables = Enum.drop_every(tables, 2)
+    render(conn, "order_master_table.html", first_tables: first_tables, second_tables: second_tables)
+  end
+
   def new(conn, _params) do
     changeset = Table.changeset(%Table{})
     render(conn, "new.html", changeset: changeset)

@@ -5,6 +5,11 @@ defmodule Sas.TableSessionController do
     render conn, "new.html"
   end
 
+  def create(conn, params) when params == %{} do
+    conn
+    |> render("new.html")
+  end
+
   def create(conn, %{"name" => name, "password" => pass}) do
     case Sas.TableAuth.table_login_by_name_and_pass(conn, name, pass, repo: Repo) do
       {:ok, conn} ->
