@@ -6,7 +6,6 @@
   <thead>
     <tr>
       <th>Bill No.</th>
-      <th>Status</th>
       <th>Total Cost</th>
       <th></th>
     </tr>
@@ -15,7 +14,6 @@
 <%= for order <- @orders do %>
     <tr>
       <td><%= bill_no(order) %></td>
-      <td><%= order.status %></td>
       <td><%= order.total %></td>
 
       <td class="text-right">

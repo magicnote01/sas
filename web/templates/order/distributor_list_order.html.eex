@@ -1,6 +1,12 @@
-<h2>Listing orders</h2>
+<h2>Delivery Orders List</h2>
 
-<table class="table" id="socket_distributor">
+<%= link "Show Pending Orders", to: order_path(@conn, :distributor), class: "btn btn-primary" %>
+
+<%= link "Show In Progress Orders", to: order_path(@conn, :distributor_active_order), class: "btn btn-primary" %>
+
+<%= link "Show Recent Orders", to: order_path(@conn, :distributor_recent_orders), class: "btn btn-primary" %>
+
+<table class="table alternative-color-table" id="socket_distributor">
   <thead>
     <tr>
       <th>Bill No.</th>
@@ -30,5 +36,5 @@
     </tr>
 <% end %>
   </tbody>
-  <%= link "Show My Active Orders", to: order_path(@conn, :distributor_active_order) %>
+
 </table>

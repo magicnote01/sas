@@ -84,6 +84,7 @@ defmodule Sas.Router do
       pipe_through [:distributor]
       get "/", OrderController, :distributor
       get "/active", OrderController, :distributor_active_order
+      get "/recent", OrderController, :distributor_recent_orders
       get "/orders/take/:id", OrderController, :distributor_take_order
       get "/orders/show/:id", OrderController, :distributor_show_order
       put "/orders/update/:id", OrderController, :distributor_update_order
@@ -93,7 +94,9 @@ defmodule Sas.Router do
     scope "/waiter" do
       pipe_through [:waiter]
       get "/", OrderController, :waiter
-      get "/orders/complete/:id", OrderController, :waiter_complete_order
+      get "/orders", OrderController, :waiter_all_order
+      get "/orders/show/:id", OrderController, :waiter_show_order
+      #get "/orders/complete/:id", OrderController, :waiter_complete_order
     end
 
     scope "/cashier" do

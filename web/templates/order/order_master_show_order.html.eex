@@ -34,6 +34,10 @@
   </tr>
 </table>
 
+<div class="btn btn-primary">Calculate</div>
+
+<br />
+
 <div class="form-group">
   <%= submit "Receive Money", class: "btn btn-primary" %>
 </div>

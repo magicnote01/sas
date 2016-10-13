@@ -1,11 +1,21 @@
 
+<%= link "Show Pending Orders", to: order_path(@conn, :distributor), class: "btn btn-primary" %>
+
+<%= link "Show In Progress Orders", to: order_path(@conn, :distributor_active_order), class: "btn btn-primary" %>
+
+<%= link "Show Recent Orders", to: order_path(@conn, :distributor_recent_orders), class: "btn btn-primary" %>
+
 <%= for changeset <- @changesets do %>
 
-  <%= if changeset.data.waiter do %>
-    <%= render "distributor_show_order.html", conn: @conn, changeset: changeset, delivery_order: changeset.data, waiters: @waiters, have_waiter: true %>
-  <%= else %>
-    <%= render "distributor_show_order.html", conn: @conn, changeset: changeset, delivery_order: changeset.data, waiters: @waiters, have_waiter: false %>
-  <% end %>
+  <div class="order-border-box">
+
+    <%= if changeset.data.waiter do %>
+      <%= render "distributor_show_order.html", conn: @conn, changeset: changeset, delivery_order: changeset.data, waiters: @waiters, have_waiter: true %>
+    <%= else %>
+      <%= render "distributor_show_order.html", conn: @conn, changeset: changeset, delivery_order: changeset.data, waiters: @waiters, have_waiter: false %>
+    <% end %>
+
+    </div>
 
 <% end %>
 

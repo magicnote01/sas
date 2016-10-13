@@ -23,4 +23,7 @@
 </ul>
 
 <%= link "Edit", to: product_path(@conn, :edit, @product) %>
+
+<br /><br />
+
 <%= link "Back", to: product_path(@conn, :index) %>

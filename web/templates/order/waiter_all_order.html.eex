@@ -1,0 +1,28 @@
+<h2>Delivery Orders List</h2>
+
+<%= link "My Pending Orders", to: order_path(@conn, :waiter), class: "btn btn-primary" %>
+
+<table class="table alternative-color-table">
+  <thead>
+    <tr>
+      <th>Bill No.</th>
+      <th>Created At</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for delivery_order <- @delivery_orders do %>
+    <tr id=<%="#{delivery_order.id}"%> class="distributor_row" >
+      <td id=<%="#{delivery_order.id}_billNo"%> ><%= bill_no(delivery_order.order) %></td>
+      <td id=<%="#{delivery_order.id}_type"%> ><%= delivery_order.type %></td>
+      <td id=<%="#{delivery_order.id}_tableName"%> ><%= delivery_order.table.name %></td>
+      <td id=<%="#{delivery_order.id}_status"%> ><%= delivery_order.status %></td>
+
+      <td><%= link "show", to: order_path(@conn, :waiter_show_order, delivery_order), class: "btn btn-default btn-xs" %></td>
+    </tr>
+<% end %>
+  </tbody>
+
+</table>

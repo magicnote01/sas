@@ -8,16 +8,6 @@
   </li>
 
   <li>
-    <strong>Password:</strong>
-    <%= @user.password %>
-  </li>
-
-  <li>
-    <strong>Password hash:</strong>
-    <%= @user.password_hash %>
-  </li>
-
-  <li>
     <strong>Role:</strong>
     <%= @user.role %>
   </li>
@@ -25,4 +15,7 @@
 </ul>
 
 <%= link "Edit", to: user_path(@conn, :edit, @user) %>
+
+<br /><br />
+
 <%= link "Back", to: user_path(@conn, :index) %>

@@ -4,3 +4,19 @@
   margin-left: 5px;
   margin-right: 5px;
 }
+
+.order-border-box{
+  border:solid 2px grey;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 5px 5px 5px 5px;
+}
+
+.alternative-color-table > tbody > tr:nth-child(2n) {
+  background-color: #e6e6ff;
+}
+
+.btn-primary{
+  margin-top: 3px;
+  margin-bottom: 3px;
+}

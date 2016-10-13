@@ -1,9 +1,13 @@
+<%= link "All Delivery Orders", to: order_path(@conn, :waiter_all_order), class: "btn btn-primary" %>
+
 <div id="socket_waiter">
 
 <%= for delivery_order <- @delivery_orders do %>
+  <div class="order-border-box">
 
-  <div>
-    <%= render "waiter_show_order.html", conn: @conn, delivery_order: delivery_order %>
+    <div>
+      <%= render "waiter_show_order.html", conn: @conn, delivery_order: delivery_order %>
+    </div>
   </div>
 
 <% end %>

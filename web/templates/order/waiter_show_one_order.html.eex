@@ -1,3 +1,7 @@
+<%= link "My Pending Orders", to: order_path(@conn, :waiter), class: "btn btn-primary" %>
+
+<%= link "All Delivery Orders", to: order_path(@conn, :waiter_all_order), class: "btn btn-primary" %>
+
 <%= render "delivery_base_show.html", delivery_order: @delivery_order %>
 
 <p>

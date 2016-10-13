@@ -24,12 +24,12 @@ defmodule Sas.OrderController do
 
   def table_index(conn, _params) do
     table = conn.assigns.current_table
+
     orders = Repo.all(
       from o in Order,
-        where: o.table_id == ^table.id,
+        where: o.table_id == ^table.id and o.status != ^Order.status_cancel,
         select: o
     )
-    |> Repo.preload(:table)
     |> Enum.sort_by(&(&1.id), &>=/2)
     render(conn, "table_index.html", orders: orders, table: table)
   end
@@ -207,19 +207,15 @@ defmodule Sas.OrderController do
         _ -> DeliveryOrder.type_non_bar()
       end
 
-    [Order.status_submit, Order.status_in_process, Order.status_delivering]
+    [Order.status_submit, Order.status_in_process]
     |> Enum.map( fn status ->
       q = from o in DeliveryOrder,
           select: o, preload: [:table, :distributor, :waiter, :order],
           where: o.status == ^status and o.type == ^order_type,
           order_by: o.id
-      if status == Order.status_delivering do
-        order = Repo.all(q)
-        |> Enum.sort(&(&1.waiter.name < &2.waiter.name))
-      else
         Repo.all(q)
       end
-    end )
+      )
     |> Enum.flat_map(&(&1))
   end
 
@@ -279,15 +275,61 @@ defmodule Sas.OrderController do
     end
   end
 
+  def distributor_recent_orders(conn, _) do
+    distributor = conn.assigns.current_user
+
+    distributor_bar = User.distributor_bar
+    distributor_non_bar = User.distributor_non_bar
+
+    order_type =
+      case distributor.role do
+        ^distributor_bar -> DeliveryOrder.type_bar()
+        ^distributor_non_bar -> DeliveryOrder.type_non_bar()
+        _ -> DeliveryOrder.type_non_bar()
+      end
+
+    q = from o in DeliveryOrder,
+        where: o.status == ^Order.status_delivering and o.type == ^order_type,
+        order_by: [desc: o.updated_at],
+        limit: 20,
+        select: o, preload: [:order, :table, :distributor, :waiter]
+    delivery_orders = Repo.all q
+    render(conn, "distributor_list_order.html", delivery_orders: delivery_orders)
+  end
+
   def waiter(conn, _) do
     waiter = conn.assigns.current_user
 
     q = from o in DeliveryOrder,
         where: o.status == ^Order.status_delivering and o.waiter_id == ^waiter.id,
+        order_by: [desc: o.updated_at],
+        limit: 2,
         select: o, preload: [:order, :table, :line_orders, :distributor, :waiter]
     delivery_orders = Repo.all q
 
     render(conn, "waiter_list_order.html", delivery_orders: delivery_orders)
+  end
+
+  def waiter_all_order(conn, _) do
+    waiter = conn.assigns.current_user
+
+    q = from o in DeliveryOrder,
+        where: o.status == ^Order.status_delivering and o.waiter_id == ^waiter.id,
+        order_by: [desc: o.updated_at],
+        select: o, preload: [:order, :table]
+    delivery_order = Repo.all q
+
+    render(conn, "waiter_all_order.html", delivery_orders: delivery_order)
+  end
+
+  def waiter_show_order(conn, %{"id" => id}) do
+    delivery_order = Repo.get!(DeliveryOrder, id)
+    |> Repo.preload(:table)
+    |> Repo.preload(:line_orders)
+    |> Repo.preload(:order)
+    |> Repo.preload(:distributor)
+
+    render(conn, "waiter_show_one_order.html", delivery_order: delivery_order)
   end
 
   def waiter_complete_order(conn, %{"id" => id}) do

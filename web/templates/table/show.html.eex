@@ -15,4 +15,7 @@
 </ul>
 
 <%= link "Edit", to: table_path(@conn, :edit, @table) %>
+
+<br /><br />
+
 <%= link "Back", to: table_path(@conn, :index) %>
