@@ -1,0 +1,29 @@
+<h2>Orders Summary Reports</h2>
+
+<table class="table alternative-color-table">
+  <thead>
+    <tr>
+      <th>Bill No.</th>
+      <th>Created At</th>
+      <th>Table</th>
+      <th>Status</th>
+      <th>Order Master</th>
+      <th>Total</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  <%= for order <- @orders do %>
+      <tr>
+        <td><%= Sas.OrderView.bill_no(order) %></td>
+        <td><%= show_datetime(order.inserted_at) %></td>
+        <td><%= if order.table, do: order.table.name, else: "" %></td>
+        <td><%= order.status %></td>
+        <td><%= if order.order_master, do: order.order_master.name, else: "" %></td>
+        <td><%= order.total %></td>
+        <td></td>
+      </tr>
+  <% end %>
+  </tbody>
+
+</table>

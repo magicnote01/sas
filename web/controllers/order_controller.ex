@@ -60,9 +60,17 @@ defmodule Sas.OrderController do
         case Repo.insert(changeset) do
           {:ok, order} ->
             OrderChannel.broadcast_new_order(order.id)
-             conn
-             |> put_flash(:info, "Order created successfully.")
-             |> redirect(to: order_path(conn, :table_index))
+            user = conn.assigns[:current_user]
+            cond do
+              user && user.role == User.order_master ->
+                conn
+                |> redirect(to: order_path(conn, :order_master_show_order, order))
+              true ->
+                conn
+                |> put_flash(:info, "Order created successfully.")
+                |> redirect(to: order_path(conn, :table_index))
+            end
+
           {:error, changeset} ->
             render(conn, "table_new.html", changeset: changeset)
         end
@@ -211,9 +219,9 @@ defmodule Sas.OrderController do
     |> Enum.map( fn status ->
       q = from o in DeliveryOrder,
           select: o, preload: [:table, :distributor, :waiter, :order],
-          where: o.status == ^status and o.type == ^order_type,
-          order_by: o.id
+          where: o.status == ^status and o.type == ^order_type
         Repo.all(q)
+        |> Enum.sort(&(Timex.diff(&1.updated_at, &2.updated_at) < 0 ))
       end
       )
     |> Enum.flat_map(&(&1))
@@ -227,7 +235,7 @@ defmodule Sas.OrderController do
 
     case Repo.update(changeset) do
       {:ok, order} ->
-        OrderChannel.broadcast_update_order(order.id)
+        #OrderChannel.broadcast_update_order(order.id)
         conn
         |> put_flash(:info, "Order updated successfully.")
         |> redirect(to: order_path(conn, :distributor_show_order, delivery_order))
@@ -264,7 +272,7 @@ defmodule Sas.OrderController do
 
     case Repo.update(changeset) do
       {:ok, order} ->
-        OrderChannel.broadcast_new_order(order.id)
+        #OrderChannel.broadcast_new_order(order.id)
         conn
         |> put_flash(:info, "Order updated successfully.")
         |> redirect(to: order_path(conn, :distributor))
@@ -338,7 +346,7 @@ defmodule Sas.OrderController do
     changeset = DeliveryOrder.changeset_complete_delivery_order(delivery_order)
     case Repo.update(changeset) do
       {:ok, order} ->
-        OrderChannel.broadcast_new_order(order.id)
+        #OrderChannel.broadcast_new_order(order.id)
         conn
         |> put_flash(:info, "Order updated successfully.")
         |> redirect(to: order_path(conn, :waiter))

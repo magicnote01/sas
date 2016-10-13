@@ -1,4 +1,4 @@
-<h2>Listing order master sessions</h2>
+<h2>Order Master Sessions</h2>
 
 <%= link "New Order Master Session", to: order_master_session_path(@conn, :new), class: "btn btn-primary" %>
 

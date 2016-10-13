@@ -70,4 +70,18 @@ defmodule Sas.OrderMasterSessionController do
         |> redirect(to: order_master_session_path(conn, :index))
     end
   end
+
+  def current_session(conn, _) do
+    current_order_master_session = conn.assigns.current_order_master_session
+    |> Repo.preload(:user)
+    |> Repo.preload([:transactions, transactions: [:table, :order]])
+
+    transactions =
+      current_order_master_session.transactions
+      |> Enum.sort(&(Timex.diff(&1.inserted_at, &2.inserted_at) > 0 ))
+
+    current_order_master_session = Map.put(current_order_master_session, :transactions, transactions)
+
+    render(conn, "current_session_show.html", order_master_session: current_order_master_session)
+  end
 end

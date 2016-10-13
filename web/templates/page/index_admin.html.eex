@@ -21,5 +21,10 @@
 
   <div class="col-lg-6">
     <h4>Reports</h4>
+    <ul>
+      <li>
+        <%= link "Orders Summary", to: report_path(@conn, :orders_summary) %>
+      </li>
+    </ul>
   </div>
 </div>

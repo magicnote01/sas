@@ -2,6 +2,8 @@
 
 <%= link "New Order", to: table_path(@conn, :order_master_table), class: "btn btn-primary" %>
 
+<%= link "My Current Session", to: order_master_session_path(@conn, :current_session), class: "btn btn-primary" %>
+
 <table class="table alternative-color-table" id="socket_order_master">
   <thead>
     <tr>

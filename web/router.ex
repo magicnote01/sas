@@ -50,7 +50,7 @@ defmodule Sas.Router do
   end
 
   scope "/", Sas do
-    pipe_through [:browser, :table] # Use the default browser stack
+    pipe_through [:browser, :table, :staff] # Use the default browser stack
 
     get "/", TableSessionController, :new
     post "/t", TableSessionController, :create
@@ -78,6 +78,11 @@ defmodule Sas.Router do
       resources "/users", UserController, only: [:index, :new, :create, :show, :edit, :update ]
       resources "/tables", TableController, only: [:index, :new, :create, :show, :edit, :update ]
       resources "/products", ProductController
+
+      scope "/reports" do
+         get "/orders_summary", ReportController, :orders_summary
+      end
+
     end
 
     scope "/distributor" do
@@ -115,6 +120,7 @@ defmodule Sas.Router do
 
       scope "/orders" do
         pipe_through [:order_master_session]
+        get "/transactions", OrderMasterSessionController, :current_session
         get "/show/:id", OrderController, :order_master_show_order
         post "/close/:id", OrderController, :order_master_close_order
         delete "/cancel/:id", OrderController, :order_master_cancel_order

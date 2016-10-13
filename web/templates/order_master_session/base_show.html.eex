@@ -1,0 +1,47 @@
+<table class="table">
+  <tr>
+    <td>Order Master</td>
+    <td><%= if @order_master_session.user, do: @order_master_session.user.name, else: "" %></td>
+  </tr>
+  <tr>
+    <td>Status</td>
+    <td><%= @order_master_session.status %></td>
+  </tr>
+  <tr>
+    <td>Total Money</td>
+    <td><%= @order_master_session.total_money %></td>
+  </tr>
+  <tr>
+    <td>Create At</td>
+    <td><%= show_datetime(@order_master_session.inserted_at) %></td>
+  </tr>
+  <tr>
+    <td>Updated At</td>
+    <td><%= show_datetime(@order_master_session.updated_at) %></td>
+  </tr>
+</table>
+
+<table class="table alternative-color-table">
+  <thead>
+    <tr>
+      <th>Received At</th>
+      <th>Bill No</th>
+      <th>Table</th>
+      <th>Total Money</th>
+      <th>Received Money</th>
+      <th>Change</th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for transaction <- @order_master_session.transactions do %>
+    <tr>
+      <td><%= show_datetime(transaction.inserted_at) %></td>
+      <td><%= Sas.OrderView.bill_no(transaction.order) %></td>
+      <td><%= if transaction.table, do: transaction.table.name, else: "" %></td>
+      <td><%= transaction.total %></td>
+      <td><%= transaction.received_money %></td>
+      <td><%= transaction.change %></td>
+    </tr>
+<% end %>
+  </tbody>
+</table>

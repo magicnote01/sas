@@ -1,0 +1,5 @@
+<h2>Order Master Session</h2>
+
+<%= link "Show Waiting Orders", to: order_path(@conn, :order_master), class: "btn btn-primary" %>
+
+<%= render "base_show.html", order_master_session: @order_master_session %>
