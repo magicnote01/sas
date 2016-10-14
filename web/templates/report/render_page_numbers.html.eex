@@ -1,0 +1,9 @@
+<ul class="pagination text-center">
+  <%= for index <- 1..@count do %>
+    <%= if index != @page do %>
+      <li><%= link "#{index}", to: report_path(@conn, :orders_summary, page: index) %></li>
+    <% else %>
+      <li class="active"><a href="#"><%= index %></a></li>
+    <% end %>
+  <% end %>
+</ul>

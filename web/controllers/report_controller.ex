@@ -11,21 +11,28 @@ defmodule Sas.ReportController do
 
   #Orders Summary
   def orders_summary(conn, page) when page == %{} do
-    orders_summary(conn, %{"page" => 0})
+    orders_summary(conn, %{"page" => 1})
   end
 
   def orders_summary(conn, %{"page" => page}) do
     count = Repo.aggregate(Order, :count, :id)
+    page = String.to_integer("#{page}") 
     orders = orders_summary_query_results(page)
 
-    render(conn, "orders_summary.html", orders: orders, count: count)
+    page_count =
+      Float.ceil(count/20)
+      |> trunc
+
+    render(conn, "orders_summary.html", orders: orders, count: page_count, page: page)
   end
 
   def orders_summary_query_results(page \\ 0) do
+    offset = (page - 1) * 20
+
     q = from o in Order,
         order_by: o.id,
         limit: 20,
-        offset: ^page,
+        offset: ^offset,
         preload: [:order_master, :table]
     Repo.all(q)
   end

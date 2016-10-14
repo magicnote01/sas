@@ -16,7 +16,7 @@
   </thead>
   <tbody>
 <%= for order <- @orders do %>
-    <tr id=<%="#{order.id}"%> class="distributor_row" >
+    <tr id=<%="#{order.id}"%> class="order_master_row" >
       <td id=<%="#{order.id}_billNo"%> ><%= link bill_no(order), to: order_path(@conn, :order_master_show_order, order) %></td>
       <td id=<%="#{order.id}_createAt"%> ><%= show_datetime(order.inserted_at) %></td>
       <td id=<%="#{order.id}_tableName"%> ><%= order.table.name %></td>

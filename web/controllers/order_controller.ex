@@ -8,6 +8,7 @@ defmodule Sas.OrderController do
   alias Sas.Table
   alias Sas.User
   alias Sas.OrderChannel
+  alias Sas.DeliveryOrderChannel
   alias Sas.DeliveryOrder
   alias Sas.Transaction
 
@@ -200,22 +201,18 @@ defmodule Sas.OrderController do
 
   def distributor(conn, _) do
     distributor = conn.assigns.current_user
+    order_type =
+      distributor_get_order_type(distributor)
+      |> String.downcase
+
     delivery_orders = distributor_get_orders(distributor)
-    render(conn, "distributor_list_order.html", delivery_orders: delivery_orders)
+    render(conn, "distributor_list_order.html", delivery_orders: delivery_orders, order_type: order_type)
   end
 
   defp distributor_get_orders(distributor) do
-    distributor_bar = User.distributor_bar
-    distributor_non_bar = User.distributor_non_bar
+    order_type = distributor_get_order_type(distributor)
 
-    order_type =
-      case distributor.role do
-        ^distributor_bar -> DeliveryOrder.type_bar()
-        ^distributor_non_bar -> DeliveryOrder.type_non_bar()
-        _ -> DeliveryOrder.type_non_bar()
-      end
-
-    [Order.status_submit, Order.status_in_process]
+    [Order.status_submit]
     |> Enum.map( fn status ->
       q = from o in DeliveryOrder,
           select: o, preload: [:table, :distributor, :waiter, :order],
@@ -235,7 +232,7 @@ defmodule Sas.OrderController do
 
     case Repo.update(changeset) do
       {:ok, order} ->
-        #OrderChannel.broadcast_update_order(order.id)
+        DeliveryOrderChannel.broadcast_update_delivery_order(order.id)
         conn
         |> put_flash(:info, "Order updated successfully.")
         |> redirect(to: order_path(conn, :distributor_show_order, delivery_order))
@@ -272,7 +269,7 @@ defmodule Sas.OrderController do
 
     case Repo.update(changeset) do
       {:ok, order} ->
-        #OrderChannel.broadcast_new_order(order.id)
+        DeliveryOrderChannel.broadcast_update_delivery_order(order.id)
         conn
         |> put_flash(:info, "Order updated successfully.")
         |> redirect(to: order_path(conn, :distributor))
@@ -286,15 +283,7 @@ defmodule Sas.OrderController do
   def distributor_recent_orders(conn, _) do
     distributor = conn.assigns.current_user
 
-    distributor_bar = User.distributor_bar
-    distributor_non_bar = User.distributor_non_bar
-
-    order_type =
-      case distributor.role do
-        ^distributor_bar -> DeliveryOrder.type_bar()
-        ^distributor_non_bar -> DeliveryOrder.type_non_bar()
-        _ -> DeliveryOrder.type_non_bar()
-      end
+    order_type = distributor_get_order_type(distributor)
 
     q = from o in DeliveryOrder,
         where: o.status == ^Order.status_delivering and o.type == ^order_type,
@@ -303,6 +292,17 @@ defmodule Sas.OrderController do
         select: o, preload: [:order, :table, :distributor, :waiter]
     delivery_orders = Repo.all q
     render(conn, "distributor_list_order.html", delivery_orders: delivery_orders)
+  end
+
+  defp distributor_get_order_type(distributor) do
+    distributor_bar = User.distributor_bar
+    distributor_non_bar = User.distributor_non_bar
+
+    case distributor.role do
+      ^distributor_bar -> DeliveryOrder.type_bar()
+      ^distributor_non_bar -> DeliveryOrder.type_non_bar()
+      _ -> DeliveryOrder.type_non_bar()
+    end
   end
 
   def waiter(conn, _) do
@@ -402,6 +402,21 @@ defmodule Sas.OrderController do
 
     case Repo.transaction(multi) do
       {:ok, %{order: order, transaction: transaction, delivery_order_bar: delivery_order_bar, delivery_order_non_bar: delivery_order_non_bar}} ->
+        OrderChannel.broadcast_update_order(order.id)
+        DeliveryOrderChannel.broadcast_new_delivery_order_bar(delivery_order_bar.id)
+        DeliveryOrderChannel.broadcast_new_delivery_order_non_bar(delivery_order_non_bar.id)
+        conn
+        |> put_flash(:info, "Order updated successfully.")
+        |> redirect(to: order_path(conn, :order_master))
+      {:ok, %{order: order, transaction: transaction, delivery_order_bar: delivery_order_bar}} ->
+        OrderChannel.broadcast_update_order(order.id)
+        DeliveryOrderChannel.broadcast_new_delivery_order_bar(delivery_order_bar.id)
+        conn
+        |> put_flash(:info, "Order updated successfully.")
+        |> redirect(to: order_path(conn, :order_master))
+      {:ok, %{order: order, transaction: transaction, delivery_order_non_bar: delivery_order_non_bar}} ->
+        OrderChannel.broadcast_update_order(order.id)
+        DeliveryOrderChannel.broadcast_new_delivery_order_non_bar(delivery_order_non_bar.id)
         conn
         |> put_flash(:info, "Order updated successfully.")
         |> redirect(to: order_path(conn, :order_master))

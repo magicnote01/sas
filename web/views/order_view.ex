@@ -13,24 +13,33 @@ defmodule Sas.OrderView do
   end
 
   def render("order.json", %{order: order}) do
+    link =
+      bill_no(order)
+      |> link(to: order_path(Sas.Endpoint, :order_master_show_order, order))
+      |> safe_to_string
+
     %{id: order.id,
       billNo: bill_no(order),
+      link: link,
       status: order.status,
       total: Money.to_string(order.total),
       table: render_one(order.table, Sas.TableView, "table.json"),
       insertedAt: show_datetime(order.inserted_at),
       paymentMethod: order.payment_method,
-      serviceCharge: Money.to_string(order.service_charge),
-      distributor: render_one(order.distributor, Sas.UserView, "user.json"),
-      cashier: render_one(order.cashier, Sas.UserView, "user.json"),
-      waiter: render_one(order.waiter, Sas.UserView, "user.json")
+      serviceCharge: Money.to_string(order.service_charge)
       }
   end
 
-  def render("order_detailed.json", %{order: order}) do
-    line_orders = render_many(order.line_orders, Sas.LineOrderView, "line_order.json")
-    render("order.json", %{order: order})
-    |> Map.put(:lineOrders, line_orders)
+  def render("delivery_order.json", %{delivery_order: delivery_order}) do
+    %{id: delivery_order.id,
+      billNo: bill_no(delivery_order.order),
+      insertedAt: show_datetime(delivery_order.inserted_at),
+      table: render_one(delivery_order.table, Sas.TableView, "table.json"),
+      type: delivery_order.type,
+      status: delivery_order.status,
+      distributor: render_one(delivery_order.distributor, Sas.UserView, "user.json"),
+      waiter: render_one(delivery_order.waiter, Sas.UserView, "user.json")
+      }
   end
 
 end

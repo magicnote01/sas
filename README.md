@@ -2,8 +2,10 @@ Order System for SAS16 Halloween Party
 Built using phoenixframework
 http://www.phoenixframework.org/
 
-TODO
+Beta 1.0
 
-1. Add report feature
-2. Split distributor between bar and non-bar
-3. Add page for order master to order using table page
+CONSIDER TODO
+
+1. Add more report feature
+2. Add Search
+3. Beautify

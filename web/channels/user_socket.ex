@@ -6,6 +6,8 @@ defmodule Sas.UserSocket do
   ## Channels
   # channel "room:*", Sas.RoomChannel
   channel "orders:*", Sas.OrderChannel
+  channel "delivery_orders:*", Sas.DeliveryOrderChannel
+  channel "order_master_sessions:*", Sas.TransactionChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

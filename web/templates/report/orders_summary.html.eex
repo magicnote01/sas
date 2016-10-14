@@ -27,3 +27,5 @@
   </tbody>
 
 </table>
+
+<%= render "render_page_numbers.html", count: @count, method: :orders_summary, page: @page, conn: @conn %>

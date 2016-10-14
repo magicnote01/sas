@@ -6,7 +6,7 @@
 
 <%= link "Show Recent Orders", to: order_path(@conn, :distributor_recent_orders), class: "btn btn-primary" %>
 
-<table class="table alternative-color-table" id="socket_distributor">
+<table class="table alternative-color-table" id=<%="socket_distributor_#{@order_type}"%> >
   <thead>
     <tr>
       <th>Bill No.</th>

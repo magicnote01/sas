@@ -9,7 +9,7 @@ let Order = {
   },
 
   onReady(element, socket, mode){
-    let orderChannel = socket.channel("delivery_orders:" + mode);
+    let orderChannel = socket.channel("orders:" + mode);
     orderChannel.join()
 
     orderChannel.on("new", (resp) => {
@@ -18,7 +18,7 @@ let Order = {
   },
 
   onReadyWithOrderId(element, socket, mode, orderId){
-    let orderChannel = socket.channel("delivery_orders:" + orderId)
+    let orderChannel = socket.channel("orders:" + orderId)
     orderChannel.join()
 
     orderChannel.on("update", (resp) => {
@@ -30,18 +30,13 @@ let Order = {
     let template = element.insertRow(-1)
 
     template.id = order.id
-    template.class = "distributor_row"
+    template.class = "order_master_row"
     template.innerHTML = `
-      <td id="${order.id}_billNo" >${order.billNo}</td>
-      <td id="${order.id}_type" >${order.type}</td>
+      <td id="${order.id}_billNo" >${order.link}</td>
       <td id="${order.id}_createAt" >${order.insertedAt}</td>
       <td id="${order.id}_tableName" >${(order.table ? order.table.name : "")}</td>
       <td id="${order.id}_status" >${order.status}</td>
-      <td id="${order.id}_distributorName" >${(order.distributor ? order.distributor.name : "")}</td>
-      <td id="${order.id}_waiterName" >${(order.waiter ? order.waiter.name : "")}</td>
-
-      <td id="${order.id}_link" class="text-right">
-      <a class="btn btn-default btn-xs" href="/staff/distributor/orders/take/${order.id}">Take Order</a></td>
+      <td id="${order.id}_total" >${order.total}</td>
     `
     this.onReadyWithOrderId(template, socket, mode, order.id)
 
@@ -49,7 +44,7 @@ let Order = {
 
   updateOrderRow(order, orderChannel, element){
     let orderElement = document.getElementById(order.id)
-    if(order.status === "Delivering" || order.status == "In Process"){
+    if(order.status === "Close" || order.status == "Cancel" ){
       let row = orderElement.rowIndex
       element.deleteRow(row)
       orderChannel.leave()
